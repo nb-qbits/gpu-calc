@@ -52,11 +52,13 @@ button{font-family:var(--sans);cursor:pointer}
 .nav-identity{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text3);margin-right:16px;font-family:var(--mono)}
 .nav-tabs{display:flex;gap:2px;flex:1;overflow-x:auto}
 .nav-tab{
-  padding:0 14px;height:48px;display:flex;align-items:center;
+  padding:0 12px;height:48px;display:flex;align-items:center;flex-direction:column;justify-content:center;gap:1px;
   font-size:13px;color:var(--text2);background:none;border:none;
   border-bottom:2px solid transparent;white-space:nowrap;
   transition:color .15s,border-color .15s;
 }
+.nav-tab .nav-sub{font-size:9px;color:var(--text4);font-weight:400;display:none;white-space:nowrap}
+@media(min-width:1100px){.nav-tab .nav-sub{display:block}}
 .nav-tab:hover{color:var(--text1)}
 .nav-tab.active{color:var(--blue);border-bottom-color:var(--blue)}
 .nav-right{display:flex;align-items:center;gap:10px;margin-left:auto}
@@ -84,6 +86,7 @@ button{font-family:var(--sans);cursor:pointer}
 
 /* ===== PAGES ===== */
 .page{display:none;min-height:calc(100vh - 48px - 40px)}
+@keyframes spin{to{transform:rotate(360deg)}}
 .page.active{display:block}
 
 /* ===== HOME PAGE ===== */
@@ -264,6 +267,11 @@ button{font-family:var(--sans);cursor:pointer}
 .hf-status{font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:6px}
 .hf-status.ok{color:var(--green)}
 .hf-status.err{color:var(--red)}
+.hf-token-row{margin-bottom:8px}
+.hf-token-toggle{font-size:11px;color:var(--text3);text-decoration:none}
+.hf-token-toggle:hover{color:var(--blue)}
+.hf-token-toggle.saved{color:var(--green)}
+.hf-token-body{margin-top:6px}
 .provider-table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:8px}
 .provider-table th{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text4);padding:4px 6px;text-align:left;border-bottom:1px solid var(--border)}
 .provider-table td{padding:5px 6px;border-bottom:1px solid var(--border)}
@@ -817,13 +825,14 @@ button{font-family:var(--sans);cursor:pointer}
     vgrover1515
   </span>
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="nav('home')">Home</button>
-    <button class="nav-tab" onclick="nav('advanced')">&#9654; Quick size</button>
-    <button class="nav-tab" onclick="nav('advanced')">Advanced</button>
-    <button class="nav-tab" onclick="nav('explorer')">GPU Explorer</button>
-    <button class="nav-tab" onclick="nav('saved')">&#128204; Saved</button>
-    <button class="nav-tab" onclick="nav('hybrid')">&#128200; Hybrid savings</button>
-    <button class="nav-tab" id="nav-fleet" onclick="nav('fleet')">&#9776; Fleet routing</button>
+    <button class="nav-tab active" onclick="nav('home')">Overview</button>
+    <button class="nav-tab" onclick="nav('advanced')">&#9654; Quick Estimate</button>
+    <button class="nav-tab" onclick="nav('advanced')">Capacity<span class="nav-sub">Memory fit, KV cache, concurrency</span></button>
+    <button class="nav-tab" onclick="nav('calibrated')">&#9889; Performance<span class="nav-sub">Throughput, latency, and GPU sizing</span></button>
+    <button class="nav-tab" onclick="nav('explorer')">GPU Compare<span class="nav-sub">Compare GPUs by cost &amp; performance</span></button>
+    <button class="nav-tab" onclick="nav('saved')">&#128204; Scenarios<span class="nav-sub">Saved configurations</span></button>
+    <button class="nav-tab" onclick="nav('hybrid')">&#128200; Cost<span class="nav-sub">Cloud vs on-prem modeling</span></button>
+    <button class="nav-tab" id="nav-fleet" onclick="nav('fleet')">&#9776; Routing<span class="nav-sub">Model/API routing economics</span></button>
   </div>
   <div class="nav-right">
     <button class="dark-btn" onclick="toggleDark()">
@@ -928,6 +937,16 @@ button{font-family:var(--sans);cursor:pointer}
         <button class="hf-btn" onclick="qsHFLookup()">Lookup</button>
       </div>
       <div class="hf-status" id="qs-hf-status"></div>
+      <div class="hf-token-row" id="qs-hf-token-row" style="max-width:400px">
+        <a href="#" class="hf-token-toggle" onclick="toggleHFToken('qs');return false">🔑 Have a gated model? Paste your HF token</a>
+        <div class="hf-token-body" id="qs-hf-token-body" style="display:none">
+          <div style="display:flex;gap:6px">
+            <input class="hf-input" id="qs-hf-token" type="password" placeholder="hf_abc123..." style="flex:1;font-size:11px">
+            <button class="hf-btn" onclick="saveHFToken('qs')" style="font-size:11px">Save</button>
+          </div>
+          <div style="font-size:10px;color:var(--text4);margin-top:4px">Stored in your browser only — sent directly to HuggingFace, never to our server.</div>
+        </div>
+      </div>
       <div class="qs-footer">
         <div></div>
         <button class="btn btn-primary" onclick="qsNext(1)">Next &#8594;</button>
@@ -1041,6 +1060,16 @@ button{font-family:var(--sans);cursor:pointer}
             <button class="hf-btn" onclick="hfLookup()">Lookup</button>
           </div>
           <div class="hf-status" id="hf-status"></div>
+          <div class="hf-token-row">
+            <a href="#" class="hf-token-toggle" onclick="toggleHFToken('adv');return false">🔑 Have a gated model? Paste your HF token</a>
+            <div class="hf-token-body" id="adv-hf-token-body" style="display:none">
+              <div style="display:flex;gap:6px">
+                <input class="hf-input" id="adv-hf-token" type="password" placeholder="hf_abc123..." style="flex:1;font-size:11px">
+                <button class="hf-btn" onclick="saveHFToken('adv')" style="font-size:11px">Save</button>
+              </div>
+              <div style="font-size:10px;color:var(--text4);margin-top:4px">Stored in your browser only — sent directly to HuggingFace, never to our server.</div>
+            </div>
+          </div>
           <div class="chips-wrap" id="org-chips" style="flex-wrap:wrap">
           <button class="chip on" onclick="filterOrg('all',this)">All</button>
           <button class="chip" onclick="filterOrg('meta',this)">Meta</button>
@@ -1049,6 +1078,7 @@ button{font-family:var(--sans);cursor:pointer}
           <button class="chip" onclick="filterOrg('mistral',this)">Mistral</button>
           <button class="chip" onclick="filterOrg('nvidia',this)">NVIDIA</button>
           <button class="chip" onclick="filterOrg('redhat',this)">RedHatAI</button>
+          <button class="chip" onclick="filterOrg('openai',this)">OpenAI</button>
           <button class="chip" onclick="filterOrg('other',this)">Other</button>
         </div>
           <div id="model-chips" style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px"></div>
@@ -1154,7 +1184,7 @@ button{font-family:var(--sans);cursor:pointer}
           <div class="panel-label">Framework</div>
           <div class="chips-wrap">
             <button class="chip on" id="fw-vllm" onclick="setFW('vllm',this)">vLLM (recommended)</button>
-            <button class="chip" id="fw-naive" onclick="setFW('naive',this)">Naive / custom</button>
+            <button class="chip" id="fw-naive" onclick="setFW('naive',this)" title="No memory paging — uses ~85% of GPU memory vs vLLM's 95%. Fewer users per GPU but simpler setup.">Naive / custom</button>
           </div>
           <div class="panel-label">Mode</div>
           <div class="chips-wrap">
@@ -1299,8 +1329,8 @@ button{font-family:var(--sans);cursor:pointer}
           <div>
             <div class="panel-label" style="margin-bottom:6px">Framework</div>
             <div class="chips-wrap">
-              <button class="chip on" id="vp-fw-vllm" onclick="setFW('vllm',this);document.getElementById('vp-fw-naive').classList.remove('on');this.classList.add('on')">vLLM</button>
-              <button class="chip" id="vp-fw-naive" onclick="setFW('naive',this);document.getElementById('vp-fw-vllm').classList.remove('on');this.classList.add('on')">Naive</button>
+              <button class="chip on" id="vp-fw-vllm" onclick="setFW('vllm',this);document.getElementById('vp-fw-naive').classList.remove('on');this.classList.add('on')" title="PagedAttention — 95% GPU memory utilisation, prefix caching support">vLLM</button>
+              <button class="chip" id="vp-fw-naive" onclick="setFW('naive',this);document.getElementById('vp-fw-vllm').classList.remove('on');this.classList.add('on')" title="No paging — 85% GPU memory utilisation. Fewer users per GPU.">Naive</button>
             </div>
           </div>
           <div>
@@ -1389,7 +1419,7 @@ button{font-family:var(--sans);cursor:pointer}
         </div>
         <div class="oc" id="oc-cost" style="padding:0;overflow:hidden;display:flex;flex-direction:column">
           <div style="padding:10px 14px 6px;border-bottom:1px solid var(--border)">
-            <div class="oc-label">5-year cost</div>
+            <div class="oc-label">Monthly cost</div>
           </div>
           <div style="display:flex;flex:1">
             <div style="flex:1;padding:8px 14px 10px;border-right:1px solid var(--border)">
@@ -1518,7 +1548,7 @@ button{font-family:var(--sans);cursor:pointer}
                 <label>Framework</label>
                 <div class="chips-wrap">
                   <button class="chip on" id="l3-vllm" onclick="setFW('vllm',this)">vLLM paging ON</button>
-                  <button class="chip" id="l3-naive" onclick="setFW('naive',this)">Naive (no paging)</button>
+                  <button class="chip" id="l3-naive" onclick="setFW('naive',this)" title="No memory paging — 85% GPU memory utilisation. Fewer users per GPU.">Naive (no paging)</button>
                 </div>
               </div>
               <div class="layer-field">
@@ -1654,7 +1684,8 @@ button{font-family:var(--sans);cursor:pointer}
         <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:14px">
           <div class="slider-row"><label>GPUs needed</label><input type="range" min="1" max="64" step="1" value="2" id="h-gpus" oninput="S.hGpus=+this.value;calcHybrid()"><span class="slider-val mono" id="hv-gpus">2</span></div>
           <div class="slider-row"><label>GPUs running</label><input type="range" min="1" max="128" step="1" value="16" id="h-run" oninput="S.hRun=+this.value;calcHybrid()"><span class="slider-val mono" id="hv-run">16</span></div>
-          <div class="slider-row"><label>HW price ($K)</label><input type="range" min="5" max="60" step="1" value="25" id="h-hw" oninput="S.hHw=+this.value*1000;calcHybrid()"><span class="slider-val mono" id="hv-hw">$25K</span></div>
+          <div class="slider-row"><label>HW price ($K)</label><input type="range" min="5" max="60" step="1" value="25" id="h-hw" oninput="S.hHw=+this.value*1000;S.hGpuName='Custom';renderHGpuChips();calcHybrid()"><span class="slider-val mono" id="hv-hw">$25K</span></div>
+          <div class="slider-row" style="align-items:flex-start"><label style="padding-top:4px">On-prem GPU</label><div style="display:flex;flex-wrap:wrap;gap:4px" id="h-gpu-chips"></div></div>
           <div class="slider-row"><label>Avg utilisation</label><input type="range" min="5" max="100" step="5" value="30" id="h-util" oninput="S.hUtil=+this.value/100;calcHybrid()"><span class="slider-val mono" id="hv-util">30%</span></div>
           <div class="slider-row"><label>Amortisation</label><input type="range" min="1" max="7" step="1" value="5" id="h-amort" oninput="S.hAmort=+this.value;calcHybrid()"><span class="slider-val mono" id="hv-amort">5 yrs</span></div>
           <button class="add-prov" onclick="document.getElementById('h-extra').classList.toggle('hidden')">+ add cost (power, ops, networking...)</button>
@@ -1676,38 +1707,330 @@ button{font-family:var(--sans);cursor:pointer}
 </div>
 
 <!-- ===== GPU EXPLORER ===== -->
+
+<!-- ===== CALIBRATED PAGE ===== -->
+<div id="page-calibrated" class="page">
+  <div style="display:flex;gap:0;align-items:flex-start;min-height:calc(100vh - 88px)">
+
+    <!-- ===== LEFT PANEL ===== -->
+    <div style="width:320px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);padding:20px;min-height:calc(100vh - 88px);overflow-y:auto">
+
+      <!-- Title + action bar (top, always visible) -->
+      <div style="margin-bottom:14px">
+        <div style="font-size:16px;font-weight:700;margin-bottom:2px">⚡ Calibrated estimate</div>
+        <div style="font-size:11px;color:var(--text3)">Modeled using benchmark-calibrated inference profiles</div>
+      </div>
+
+      <!-- Action bar: Pull + Run at top -->
+      <div style="display:flex;gap:6px;margin-bottom:14px">
+        <button class="btn btn-sm" style="flex:1;color:var(--blue)" onclick="calPullFromAdvanced()">&#8593; Pull from Advanced</button>
+        <button id="cal-run-btn" class="btn btn-primary" style="flex:2;font-weight:600" onclick="runCalibratedEstimate()">&#9889; Run estimate</button>
+      </div>
+
+      <!-- MODEL -->
+      <div class="section-title">MODEL</div>
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:12px">
+        <div style="font-size:10px;color:var(--text4);font-weight:600;margin-bottom:6px">PRESET MODELS</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px" id="cal-model-chips">
+          <button class="chip on" onclick="selectCalModel('meta-llama/Meta-Llama-3.1-8B-Instruct','Llama 3.1 8B',this)">Llama 3.1 8B</button>
+          <button class="chip" onclick="selectCalModel('openai/gpt-oss-20b','gpt-oss-20b',this)">gpt-oss-20b</button>
+          <button class="chip" onclick="selectCalModel('Qwen/Qwen2.5-7B-Instruct','Qwen 2.5 7B',this)">Qwen 2.5 7B</button>
+        </div>
+        <div style="font-size:10px;color:var(--text4);font-weight:600;margin-bottom:4px">OR LOOKUP BY HF ID</div>
+        <div style="display:flex;gap:6px;margin-bottom:4px">
+          <input id="cal-hf-input" type="text" placeholder="e.g. meta-llama/Llama-3.1-8B" style="flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:var(--r);background:var(--bg2);color:var(--text1);font-size:12px">
+          <button class="btn btn-primary btn-sm" onclick="calHFLookup()" style="white-space:nowrap">Lookup</button>
+        </div>
+        <div id="cal-hf-status" style="font-size:11px;color:var(--text3);min-height:16px"></div>
+        <div id="cal-model-display" style="margin-top:6px;font-size:12px;font-weight:600;color:var(--blue)">Llama 3.1 8B</div>
+      </div>
+
+      <!-- INPUTS -->
+      <div class="section-title">INFERENCE INPUTS</div>
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:12px">
+        <div class="slider-row" style="margin-bottom:8px">
+          <label style="font-size:12px">Input tokens <span title="Approximate prompt length sent to the model" style="cursor:help;color:var(--text4);font-size:10px">(?)</span></label>
+          <input type="number" id="cal-isl" value="1024" min="64" max="32768" oninput="calPayloadEdited=false;updateCalPayload()" style="width:80px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:var(--text1);font-size:12px;font-family:var(--mono)">
+        </div>
+        <div class="slider-row" style="margin-bottom:8px">
+          <label style="font-size:12px">Output tokens <span title="Approximate response length generated by the model" style="cursor:help;color:var(--text4);font-size:10px">(?)</span></label>
+          <input type="number" id="cal-osl" value="256" min="16" max="8192" oninput="calPayloadEdited=false;updateCalPayload()" style="width:80px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:var(--text1);font-size:12px;font-family:var(--mono)">
+        </div>
+        <div class="slider-row" style="margin-bottom:8px">
+          <label style="font-size:12px">Batch size</label>
+          <input type="number" id="cal-batch" value="16" min="1" max="512" oninput="calPayloadEdited=false;updateCalPayload()" style="width:80px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:var(--text1);font-size:12px;font-family:var(--mono)">
+        </div>
+        <div class="slider-row" style="margin-bottom:0">
+          <label style="font-size:12px">Context (K tokens) <span title="Maximum tokens retained per user in KV cache (memory sizing), not current request size" style="cursor:help;color:var(--text4);font-size:10px">(?)</span></label>
+          <input type="number" id="cal-ctx" value="4" min="1" max="128" oninput="updateCalPayload()" style="width:80px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:var(--text1);font-size:12px;font-family:var(--mono)">
+        </div>
+      </div>
+
+      <!-- HARDWARE & BACKEND -->
+      <div class="section-title">HARDWARE &amp; BACKEND</div>
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:12px">
+        <div class="slider-row" style="margin-bottom:8px">
+          <label style="font-size:12px">GPU</label>
+          <select id="cal-gpu" onchange="updateCalPayload()" style="padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:var(--text1);font-size:12px">
+            <option value="h100_sxm">H100 SXM</option>
+            <option value="h200_sxm">H200 SXM</option>
+            <option value="a100_sxm">A100 80GB</option>
+            <option value="l40s">L40S</option>
+            <option value="b200_sxm">B200 SXM</option>
+            <option value="mi300x">MI300X</option>
+          </select>
+        </div>
+        <div class="slider-row" style="margin-bottom:8px">
+          <label style="font-size:12px">Backend</label>
+          <select id="cal-backend" onchange="updateCalPayload()" style="padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:var(--text1);font-size:12px">
+            <option value="trtllm">TRT-LLM</option>
+            <option value="vllm">vLLM</option>
+          </select>
+        </div>
+        <!-- TP / PP — fixed alignment -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div>
+            <div style="font-size:11px;color:var(--text3);margin-bottom:3px">Tensor parallel <span title="Splits model across GPUs within a node" style="cursor:help;color:var(--text4);font-size:10px">(?)</span></div>
+            <input type="number" id="cal-tp" value="1" min="1" max="8" onchange="updateCalPayload()" style="width:100%;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:var(--text1);font-size:12px;font-family:var(--mono);box-sizing:border-box">
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--text3);margin-bottom:3px">Pipeline parallel <span title="Splits model across nodes in sequence" style="cursor:help;color:var(--text4);font-size:10px">(?)</span></div>
+            <input type="number" id="cal-pp" value="1" min="1" max="8" onchange="updateCalPayload()" style="width:100%;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:var(--text1);font-size:12px;font-family:var(--mono);box-sizing:border-box">
+          </div>
+        </div>
+      </div>
+
+      <!-- REQUEST PAYLOAD (collapsed) -->
+      <details style="margin-bottom:8px">
+        <summary style="font-size:11px;font-weight:600;color:var(--text3);cursor:pointer;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);list-style:none;display:flex;justify-content:space-between">
+          <span>&#128196; Estimator request payload</span><span style="color:var(--text4)">▾</span>
+        </summary>
+        <div style="background:var(--bg);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--r) var(--r);padding:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <span style="font-size:10px;color:var(--text4)">Sent to estimator API. Edit before running.</span>
+            <button onclick="navigator.clipboard.writeText(document.getElementById('cal-payload-editor').value)" style="font-size:10px;padding:1px 6px;border:1px solid var(--border);border-radius:3px;background:transparent;cursor:pointer;color:var(--text3)">Copy</button>
+          </div>
+          <textarea id="cal-payload-editor" style="width:100%;height:160px;padding:8px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:var(--text1);font-size:11px;font-family:var(--mono);resize:vertical;box-sizing:border-box" onchange="calPayloadEdited=true" oninput="calPayloadEdited=true"></textarea>
+          <div style="font-size:10px;color:var(--text4);margin-top:3px">database_mode defaults to HYBRID. Edits here override the form.</div>
+        </div>
+      </details>
+
+      <!-- RAW RESPONSE (collapsed, filled after run) -->
+      <details id="cal-response-details" style="margin-bottom:8px">
+        <summary style="font-size:11px;font-weight:600;color:var(--text3);cursor:pointer;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);list-style:none;display:flex;justify-content:space-between">
+          <span>&#128269; Estimator response &amp; debug</span><span style="color:var(--text4)">▾</span>
+        </summary>
+        <div style="background:var(--bg);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--r) var(--r);padding:10px">
+          <div style="font-size:10px;color:var(--text4);font-weight:600;margin-bottom:4px">RAW JSON RESPONSE</div>
+          <div style="display:flex;justify-content:flex-end;margin-bottom:4px">
+            <button onclick="navigator.clipboard.writeText(document.getElementById('cal-raw-response').textContent)" style="font-size:10px;padding:1px 6px;border:1px solid var(--border);border-radius:3px;background:transparent;cursor:pointer;color:var(--text3)">Copy</button>
+          </div>
+          <pre id="cal-raw-response" style="font-size:10px;font-family:var(--mono);background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:8px;overflow:auto;max-height:200px;margin:0;color:var(--text2)">— not run yet —</pre>
+          <div style="font-size:10px;color:var(--text4);font-weight:600;margin:10px 0 4px">PARSED FIELDS</div>
+          <pre id="cal-parsed-fields" style="font-size:10px;font-family:var(--mono);background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:8px;overflow:auto;max-height:140px;margin:0;color:var(--text2)">— not run yet —</pre>
+        </div>
+      </details>
+
+      <div style="font-size:10px;color:var(--text4);line-height:1.4;margin-top:8px">Calibrated estimates are modeled using benchmark-calibrated inference profiles and should be validated with workload-specific benchmarking before procurement.</div>
+    </div>
+
+    <!-- ===== RIGHT PANEL ===== -->
+    <div style="flex:1;padding:20px 24px;min-width:0;overflow-x:hidden" id="cal-right">
+
+      <!-- Top action bar (matches other pages) -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+        <div>
+          <h1 style="font-size:20px;font-weight:700;margin-bottom:2px">Calibrated estimate</h1>
+          <p style="font-size:12px;color:var(--text3)">All numbers editable · results update on re-run</p>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap" id="cal-action-bar">
+          <span id="cal-cache-badge" style="font-size:10px;padding:2px 8px;border-radius:10px;background:var(--bg2);border:1px solid var(--border);display:none"></span>
+          <button id="cal-refresh-btn" style="font-size:11px;padding:3px 10px;border:1px solid var(--border);border-radius:10px;background:transparent;color:var(--blue);cursor:pointer;display:none" onclick="runCalibratedEstimate(true)">↻ Refresh</button>
+          <button class="btn btn-sm" onclick="saveCalResult()" style="display:none" id="cal-save-btn">+ Add to comparison</button>
+          <button class="btn btn-sm" onclick="exportCalToSheets()" style="color:var(--green);display:none" id="cal-export-btn">&#128202; Sheets</button>
+        </div>
+      </div>
+
+      <!-- Empty state -->
+      <div id="cal-empty" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:360px;color:var(--text4)">
+        <div style="font-size:40px;margin-bottom:12px">⚡</div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:6px">No estimate yet</div>
+        <div style="font-size:13px;text-align:center;max-width:280px;color:var(--text3)">Configure model and hardware on the left, then click Run estimate</div>
+      </div>
+
+      <!-- Results -->
+      <div id="cal-results" style="display:none">
+        <!-- Mode + model header -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+          <span id="cal-mode-badge" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px;background:var(--bg2);border:1px solid var(--border)">—</span>
+          <span id="cal-result-model" style="font-size:13px;font-weight:600;color:var(--text1)">—</span>
+          <span id="cal-result-gpu-badge" style="font-size:11px;color:var(--text3)">—</span>
+          <span id="cal-cache-ts" style="font-size:10px;color:var(--text4)"></span>
+        </div>
+        <!-- Proxy note -->
+        <div id="cal-proxy-note" style="display:none;font-size:12px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:10px;margin-bottom:14px"></div>
+        <!-- KPI tiles (decision + estimator metrics) -->
+        <div class="outcome-cards" id="cal-metrics-grid"></div>
+        <!-- GPU sizing breakdown — collapsible, editable inputs -->
+        <details id="cal-breakdown-details" style="display:none;margin-bottom:12px">
+          <summary style="font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);list-style:none;display:flex;justify-content:space-between;align-items:center;user-select:none">
+            <span>Sizing calculation</span><span style="font-size:10px;color:var(--text4)">▾ edit inputs to recalculate</span>
+          </summary>
+          <div style="border:1px solid var(--border);border-top:none;border-radius:0 0 var(--r) var(--r);padding:12px">
+            <!-- Editable sizing inputs -->
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+              <div>
+                <div style="font-size:10px;color:var(--text4);font-weight:600;margin-bottom:3px">INPUT TOKENS</div>
+                <input type="number" id="sz-isl" min="64" max="32768" style="width:100%;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text1);font-size:12px;font-family:var(--mono);box-sizing:border-box" oninput="recomputeSizing()">
+              </div>
+              <div>
+                <div style="font-size:10px;color:var(--text4);font-weight:600;margin-bottom:3px">OUTPUT TOKENS</div>
+                <input type="number" id="sz-osl" min="16" max="8192" style="width:100%;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text1);font-size:12px;font-family:var(--mono);box-sizing:border-box" oninput="recomputeSizing()">
+              </div>
+              <div>
+                <div style="font-size:10px;color:var(--text4);font-weight:600;margin-bottom:3px">BATCH SIZE</div>
+                <input type="number" id="sz-batch" min="1" max="512" style="width:100%;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text1);font-size:12px;font-family:var(--mono);box-sizing:border-box" oninput="recomputeSizing()">
+              </div>
+              <div>
+                <div style="font-size:10px;color:var(--text4);font-weight:600;margin-bottom:3px">CONTEXT (K)</div>
+                <input type="number" id="sz-ctx" min="1" max="128" style="width:100%;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text1);font-size:12px;font-family:var(--mono);box-sizing:border-box" oninput="recomputeSizing()">
+              </div>
+            </div>
+            <div id="cal-breakdown" style="font-size:12px;color:var(--text2)"></div>
+          </div>
+        </details>
+        <!-- Add to comparison — near results -->
+        <div style="display:flex;gap:8px;margin-bottom:16px;align-items:center">
+          <button class="btn btn-sm" onclick="saveCalResult()" id="cal-save-btn2" style="display:none">+ Add to comparison</button>
+          <button class="btn btn-sm" onclick="exportCalToSheets()" id="cal-export-btn2" style="color:var(--green);display:none">&#128202; Sheets</button>
+        </div>
+        <!-- Collapsible estimator details -->
+        <details style="margin-bottom:16px">
+          <summary style="font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);list-style:none;display:flex;justify-content:space-between;align-items:center">
+            <span>Estimator details</span><span style="color:var(--text4);font-size:10px">▾ expand</span>
+          </summary>
+          <div style="border:1px solid var(--border);border-top:none;border-radius:0 0 var(--r) var(--r);overflow:hidden">
+            <table style="width:100%;border-collapse:collapse" id="cal-metrics-table"></table>
+          </div>
+        </details>
+        <!-- Comparison section -->
+        <div id="cal-comparison" style="display:none">
+          <div style="font-size:13px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
+            <span>Saved runs</span>
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+              <label style="font-size:11px;color:var(--text3)">Compare by</label>
+              <select id="cal-compare-metric" onchange="renderCalChart()" style="font-size:11px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:var(--text1)">
+                <option value="tokens_per_sec">Tokens/sec</option>
+                <option value="tokens_per_sec_per_gpu">Tokens/sec/GPU</option>
+                <option value="latency_ms">Latency (ms)</option>
+                <option value="ttft_ms">TTFT (ms)</option>
+                <option value="tpot_ms">TPOT (ms)</option>
+                <option value="gpu_memory_gb">GPU memory (GB)</option>
+              </select>
+              <button class="btn btn-sm" onclick="clearCalSaved()" style="font-size:10px;padding:2px 6px;color:var(--red)">Clear all</button>
+            </div>
+          </div>
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:12px">
+            <div style="position:relative;height:300px;max-height:340px"><canvas id="cal-chart"></canvas></div>
+          </div>
+          <div style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;font-size:12px" id="cal-compare-table">
+              <thead>
+                <tr style="border-bottom:2px solid var(--border)">
+                  <th style="text-align:left;padding:6px 8px;color:var(--text3);font-weight:500">Model</th>
+                  <th style="text-align:left;padding:6px 8px;color:var(--text3);font-weight:500">GPU</th>
+                  <th style="text-align:left;padding:6px 8px;color:var(--text3);font-weight:500">Backend</th>
+                  <th style="text-align:right;padding:6px 8px;color:var(--text3);font-weight:500">Tok/s</th>
+                  <th style="text-align:right;padding:6px 8px;color:var(--text3);font-weight:500">Tok/s/GPU</th>
+                  <th style="text-align:right;padding:6px 8px;color:var(--text3);font-weight:500">Latency</th>
+                  <th style="text-align:right;padding:6px 8px;color:var(--text3);font-weight:500">TTFT</th>
+                  <th style="text-align:right;padding:6px 8px;color:var(--text3);font-weight:500">Mode</th>
+                  <th style="padding:6px 8px"></th>
+                </tr>
+              </thead>
+              <tbody id="cal-compare-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading modal -->
+  <div id="cal-loading-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center">
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:32px;max-width:340px;width:90%;text-align:center">
+      <div style="font-size:32px;margin-bottom:12px;animation:spin 1s linear infinite">⚙️</div>
+      <div style="font-size:15px;font-weight:600;margin-bottom:8px">Running calibrated estimate</div>
+      <div id="cal-loading-tip" style="font-size:12px;color:var(--text3);line-height:1.5">Querying benchmark-calibrated profiles...</div>
+    </div>
+  </div>
+</div>
+<!-- ===== END CALIBRATED PAGE ===== -->
+
 <div id="page-explorer" class="page">
   <div class="explorer-layout">
+    <!-- Header -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
       <div>
-        <h2 style="font-size:18px;font-weight:600">GPU Explorer</h2>
-        <p style="font-size:13px;color:var(--text3)">Compare NVIDIA, AMD, and cloud GPUs</p>
+        <h2 style="font-size:18px;font-weight:700">GPU Explorer</h2>
+        <p style="font-size:12px;color:var(--text3)">LLM inference planning — compare GPU generations by memory, bandwidth, and cost efficiency</p>
       </div>
-      <div style="display:flex;gap:6px">
+      <!-- Vendor toggle + legend -->
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3)">
+          <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#5b9bd5"></span>NVIDIA
+          <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#cc4444;margin-left:6px"></span>AMD
+        </div>
         <button class="chip on" id="exp-nv" onclick="toggleExpNV()">NVIDIA</button>
         <button class="chip on" id="exp-amd" onclick="toggleExpAMD()">AMD</button>
       </div>
     </div>
-    <div class="axis-selectors">
-      <span class="axis-label">X</span>
-      <button class="axis-btn on" onclick="setAxis('x','vram',this)">VRAM</button>
-      <button class="axis-btn" onclick="setAxis('x','price',this)">Price</button>
-      <button class="axis-btn" onclick="setAxis('x','tpp',this)">TPP</button>
-      <span class="axis-label" style="margin-left:8px">Y</span>
-      <button class="axis-btn" onclick="setAxis('y','vram',this)">VRAM</button>
-      <button class="axis-btn" onclick="setAxis('y','price',this)">Price</button>
-      <button class="axis-btn on" onclick="setAxis('y','tpp',this)">TPP</button>
-      <span class="axis-label" style="margin-left:8px">Bubble</span>
-      <button class="axis-btn" onclick="setAxis('b','vram',this)">VRAM</button>
-      <button class="axis-btn" onclick="setAxis('b','price',this)">Price</button>
-      <button class="axis-btn on" onclick="setAxis('b','tpp100',this)">$/100TPP</button>
-      <span style="margin-left:12px;font-size:11px;color:var(--text4)" id="axis-desc">X: VRAM (GB) · Y: Throughput (tok/s) · Bubble: $/100 TPP</span>
+    <!-- Preset views -->
+    <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+      <span style="font-size:11px;color:var(--text4);line-height:24px;margin-right:2px">Preset:</span>
+      <button class="chip on" id="exp-preset-balanced"   onclick="setExpPreset('balanced',this)">Balanced</button>
+      <button class="chip"    id="exp-preset-cost"       onclick="setExpPreset('cost',this)">Cost Efficiency</button>
+      <button class="chip"    id="exp-preset-perf"       onclick="setExpPreset('perf',this)">Performance</button>
     </div>
-    <div class="explorer-chart-wrap">
-      <canvas id="explorer-chart" style="max-height:420px"></canvas>
+    <!-- Axis selectors -->
+    <div class="axis-selectors" style="gap:4px;margin-bottom:4px;flex-wrap:wrap">
+      <span class="axis-label" style="font-weight:600">X</span>
+      <button class="axis-btn on" data-axis="x" onclick="setAxis('x','vram',this)">VRAM</button>
+      <button class="axis-btn" data-axis="x" onclick="setAxis('x','price',this)">Price</button>
+      <button class="axis-btn" data-axis="x" onclick="setAxis('x','tpp',this)">Throughput Index</button>
+      <button class="axis-btn" data-axis="x" onclick="setAxis('x','mem_bw',this)">Mem BW</button>
+      <span class="axis-label" style="margin-left:10px;font-weight:600">Y</span>
+      <button class="axis-btn" data-axis="y" onclick="setAxis('y','vram',this)">VRAM</button>
+      <button class="axis-btn" data-axis="y" onclick="setAxis('y','price',this)">Price</button>
+      <button class="axis-btn on" data-axis="y" onclick="setAxis('y','tpp',this)">Throughput Index</button>
+      <button class="axis-btn" data-axis="y" onclick="setAxis('y','mem_bw',this)">Mem BW</button>
+      <span class="axis-label" style="margin-left:10px;font-weight:600">Bubble</span>
+      <button class="axis-btn" data-axis="b" onclick="setAxis('b','vram',this)">VRAM</button>
+      <button class="axis-btn" data-axis="b" onclick="setAxis('b','price',this)">Price</button>
+      <button class="axis-btn on" data-axis="b" onclick="setAxis('b','usdPer100Tpp',this)">$ / 100 TPP</button>
+      <button class="axis-btn" data-axis="b" onclick="setAxis('b','mem_bw',this)">Mem BW</button>
     </div>
-    <div class="explorer-notice"><strong>Data notice</strong> — Purchase prices are indicative market estimates for planning purposes only. Prices vary by vendor, volume, region, and time. Throughput figures are theoretical peak estimates. Sources: NVIDIA product pages, AMD product pages, published benchmarks, market reports. Validate all figures with vendors before procurement. © gpu.calc<br><br>
-      <strong>Data notice</strong> — Purchase prices are indicative market estimates for planning purposes only. Prices vary by vendor, volume, region, and time. Validate all figures with vendors before procurement. &copy; gpu.calc
+    <!-- Chart -->
+    <div class="explorer-chart-wrap" style="position:relative;max-height:420px;padding:12px 16px 8px">
+      <!-- In-chart axis overlay (top-left) -->
+      <div id="exp-axis-overlay" style="position:absolute;top:12px;left:16px;font-size:10px;color:var(--text4);line-height:1.7;pointer-events:none;z-index:2">
+        <div><span style="color:var(--text3);font-weight:600">X</span> <span id="exp-ol-x">VRAM (GB)</span></div>
+        <div><span style="color:var(--text3);font-weight:600">Y</span> <span id="exp-ol-y">Throughput Index</span></div>
+        <div><span style="color:var(--text3);font-weight:600">●</span> <span id="exp-ol-b">Bubble = cost efficiency (smaller = better)</span></div>
+      </div>
+      <canvas id="explorer-chart"></canvas>
+    </div>
+    <!-- Insight bar -->
+    <div style="font-size:11px;color:var(--text3);margin:6px 0 12px;padding:6px 10px;background:var(--bg2);border-left:3px solid var(--blue);border-radius:0 var(--r) var(--r) 0">
+      💡 <span id="exp-insight">Top-right = high throughput. Smaller bubble = better cost efficiency. Top-left = cheaper but lower performance.</span>
+    </div>
+    <!-- Disclaimers -->
+    <div class="explorer-notice" style="font-size:11px;color:var(--text3);line-height:1.7;border-top:1px solid var(--border);padding-top:12px">
+      <strong>Throughput Index</strong> is a planning metric derived from memory bandwidth, VRAM, and architecture generation. It enables relative GPU comparison — not exact model throughput.<br>
+      <strong>Inference performance</strong> depends on model architecture (GQA vs MHA), sequence length, batching, and inference backend (vLLM, TensorRT-LLM, etc.).<br>
+      <strong>Cluster scaling</strong> — GPU-level performance does not directly translate to cluster-level throughput. Interconnect (NVLink, InfiniBand) and workload distribution impact scaling.<br>
+      <strong>Pricing</strong> reflects indicative on-prem GPU estimates and may vary significantly by provider, region, and purchasing model. Validate all figures with vendors before procurement.<br>
+      <strong>Sources:</strong> NVIDIA product pages, AMD product pages, published benchmarks, market reports. &copy; gpu.calc
     </div>
   </div>
 </div>
@@ -1755,7 +2078,7 @@ button{font-family:var(--sans);cursor:pointer}
     <div class="geo-chips" id="geo-chips"></div>
   </div>
   <div class="footer-right">
-    <span class="mono" style="font-size:10px">real-time inference only · v5.4.2</span><span id="price-freshness-badge" style="font-size:10px;margin-left:8px;color:var(--text4)"></span>
+    <span class="mono" style="font-size:10px">real-time inference only · v5.4.55</span><span id="price-freshness-badge" style="font-size:10px;margin-left:8px;color:var(--text4)"></span>
     <a href="https://github.com/nb-qbits/gpu-calc" target="_blank">&#9733; GitHub</a>
     <span style="color:var(--text4)">&copy; gpu.calc · CC BY-NC 4.0</span>
   </div>
@@ -1819,7 +2142,7 @@ var T=(function(){
   function fire(event,data){
     try{
       var payload={sid:sid,event:event,data:data||{},ts:Date.now(),tss:Math.round((Date.now()-sessionStart)/1000),url:location.hash};
-      navigator.sendBeacon&&navigator.sendBeacon(apiUrl('/api/track'),JSON.stringify(payload));
+      navigator.sendBeacon&&API_BASE&&navigator.sendBeacon(apiUrl('/api/track'),JSON.stringify(payload));
     }catch(e){}
   }
   setInterval(function(){fire('heartbeat',{t:Math.round((Date.now()-sessionStart)/1000)});},30000);
@@ -1831,10 +2154,19 @@ var T=(function(){
 var S = {
   // Model
   params:8, modelLabel:'Llama 3.1 8B', attn:'gqa', prec:'fp16',
-  numKvHeads:8, headDim:128, numLayers:32, hfId:null,
-  kvLayers:null,        // shared KV layers (Gemma 4 style) — null = use numLayers
+  numKvHeads:8, numHeads:32, headDim:128, numLayers:32, hfId:null,
+  kvLayers:null,        // effective unique KV layers (Gemma 4 / SSM hybrid) — null = use numLayers
   activeExperts:null,   // MoE active experts per token — null = not MoE
   totalExperts:null,    // MoE total experts
+  // Architecture-specific KV fields (populated by HF Lookup)
+  kvArchType:null,      // null | 'standard' | 'hybrid_sliding' | 'hybrid_ssm' | 'mla' | 'moe'
+  kvGlobalLayers:null,  // hybrid_sliding: unique global attention layers
+  kvSlidingLayers:null, // hybrid_sliding: unique sliding window layers
+  slidingWindow:null,   // hybrid_sliding: window size in tokens
+  globalKvHeads:null,   // hybrid_sliding: KV heads for global layers (if different)
+  globalHeadDim:null,   // hybrid_sliding: head dim for global layers (if different)
+  kvLoraRank:null,      // MLA: compressed KV dimension (DeepSeek V2/V3)
+  qkRopeHeadDim:null,   // MLA: rope head dim added to latent
   // Users
   users:30, ctx:8, hitrate:0.10,
   // Inference
@@ -1846,12 +2178,12 @@ var S = {
   dep:'cloud', cloudRate:3.00, disc:0,
   hwCost:25000, amort:5, kwh:0.10, infraPct:0, opexPct:0,
   // Hybrid
-  hGpus:2, hRun:16, hHw:25000, hUtil:0.30, hAmort:5, hKwh:0.10,
+  hGpus:2, hRun:16, hHw:25000, hGpuName:'H100', hUtil:0.30, hAmort:5, hKwh:0.10,
   hSplit:null, // null = auto from utilisation; number = manual override
   hDedRate:18000, // dedicated node $/mo for 8-GPU node (CoreWeave default)
   hDedGpus:8,    // GPUs per dedicated node
   // Explorer
-  expNV:true, expAMD:true, axX:'vram', axY:'tpp', axB:'tpp100',
+  expNV:true, expAMD:true, axX:'vram', axY:'tpp', axB:'usdPer100Tpp',
 };
 
 var PROVIDERS = [
@@ -1862,23 +2194,20 @@ var PROVIDERS = [
   {name:'RunPod',rate:2.72,gpu:'H100 SXM',active:false},
   {name:'Azure',rate:6.98,gpu:'H100 SXM',active:false},
   {name:'Vast.ai',rate:0.24,gpu:'H100 SXM',active:false},
-  {name:'Lambda',rate:4.99,gpu:'H200 SXM',active:false},
-  {name:'RunPod',rate:5.58,gpu:'B200 SXM',active:false},
-  {name:'AWS',rate:3.97,gpu:'A100 80GB',active:false},
 ];
 
+// DED_NODES: fallback defaults — rebuilt from Worker data when live prices load
 var DED_NODES = [
-  {name:'CoreWeave', gpu:'H100 SXM', gpus:8, rateMo:18000, active:true},
-  {name:'Lambda',    gpu:'H100 SXM', gpus:8, rateMo:14000, active:false},
-  {name:'Voltage Park',gpu:'H100 SXM',gpus:8,rateMo:12000, active:false},
-  {name:'CoreWeave', gpu:'H200 SXM', gpus:8, rateMo:28000, active:false},
-  {name:'Lambda',    gpu:'H200 SXM', gpus:8, rateMo:22000, active:false},
-  {name:'CoreWeave', gpu:'B200 SXM', gpus:8, rateMo:38000, active:false},
-  {name:'AWS p5',    gpu:'H100 SXM', gpus:8, rateMo:98000, active:false},
-  {name:'GCP a3',    gpu:'H100 SXM', gpus:8, rateMo:88000, active:false},
+  {name:'CoreWeave',   gpu:'H100 SXM', gpus:8, rateMo:18000, active:true},
+  {name:'Lambda',      gpu:'H100 SXM', gpus:8, rateMo:14000, active:false},
+  {name:'Voltage Park',gpu:'H100 SXM', gpus:8, rateMo:12000, active:false},
+  {name:'AWS p5',      gpu:'H100 SXM', gpus:8, rateMo:98000, active:false},
+  {name:'GCP a3',      gpu:'H100 SXM', gpus:8, rateMo:88000, active:false},
 ];
 var GPU_OPTIONS=['H100 SXM','H200 SXM','B100 SXM','B200 SXM','B300 SXM','A100 80GB','H20','L40S','MI300X','MI350X','Custom'];
 var CLOUD_GPU_OPTIONS=['H100 SXM','H200 SXM','B100 SXM','B200 SXM','A100 80GB','A100 40GB','H20','L40S','MI300X','Custom'];
+var _livePriceMap={};
+var _liveDedPriceMap={};
 
 var MODELS = [
   // Meta Llama
@@ -1890,7 +2219,7 @@ var MODELS = [
   {name:'Llama 3.3 70B', org:'meta',params:70, layers:80, kvHeads:8, headDim:128,attn:'gqa',hfId:'meta-llama/Llama-3.3-70B-Instruct'},
   // Qwen
   {name:'Qwen 2.5 7B',   org:'qwen',params:7,  layers:28, kvHeads:4, headDim:128,attn:'gqa',hfId:'Qwen/Qwen2.5-7B-Instruct'},
-  {name:'Qwen 2.5 14B',  org:'qwen',params:14, layers:40, kvHeads:8, headDim:128,attn:'gqa',hfId:'Qwen/Qwen2.5-14B-Instruct'},
+  {name:'Qwen 2.5 14B',  org:'qwen',params:14, layers:48, kvHeads:8, headDim:128,attn:'gqa',hfId:'Qwen/Qwen2.5-14B-Instruct'},
   {name:'Qwen 2.5 32B',  org:'qwen',params:32, layers:64, kvHeads:8, headDim:128,attn:'gqa',hfId:'Qwen/Qwen2.5-32B-Instruct'},
   {name:'Qwen 2.5 72B',  org:'qwen',params:72, layers:80, kvHeads:8, headDim:128,attn:'gqa',hfId:'Qwen/Qwen2.5-72B-Instruct'},
   {name:'QwQ 32B',       org:'qwen',params:32, layers:64, kvHeads:8, headDim:128,attn:'gqa',hfId:'Qwen/QwQ-32B'},
@@ -1920,24 +2249,37 @@ var MODELS = [
   // Red Hat
   {name:'RH Llama 8B W8A8', org:'redhat',params:8, layers:32,kvHeads:8,headDim:128,attn:'gqa'},
   {name:'RH Llama 70B W8A8',org:'redhat',params:70,layers:80,kvHeads:8,headDim:128,attn:'gqa'},
+  // ── LLM-d reference stack models ──
+  // Llama Guard 4 12B: dense, pruned from Llama 4 Scout MoE, GQA, 48L
+  {name:'Llama Guard 4 12B',org:'meta',params:12,layers:48,kvHeads:8,numHeads:32,headDim:128,attn:'gqa',hfId:'meta-llama/Llama-Guard-4-12B'},
+  // Gemma 3 12B: hybrid sliding window (5:1 local/global), only 8 global layers need full KV
+  {name:'Gemma 3 12B',org:'google',params:12,layers:48,kvHeads:4,numHeads:16,headDim:256,attn:'gqa',kvLayers:8,hfId:'google/gemma-3-12b-it'},
+  // Phi-4-reasoning: same arch as Phi-4 14B, finetuned for reasoning
+  {name:'Phi-4 reasoning',org:'other',params:14,layers:40,kvHeads:8,numHeads:40,headDim:96,attn:'gqa',hfId:'microsoft/Phi-4-reasoning'},
+  // gpt-oss-20b: MoE, 4 active / 128 total experts, GQA, sliding window 128
+  {name:'gpt-oss-20b',org:'openai',params:21,layers:36,kvHeads:8,numHeads:64,headDim:64,attn:'gqa',activeExperts:4,totalExperts:128,hfId:'openai/gpt-oss-20b'},
 ];
 
+// GPU_DATA: mem_bw = memory bandwidth TB/s (published spec)
+// tpp = Planning Throughput Index — heuristic derived from mem_bw + VRAM, for comparative planning only
 var GPU_DATA = [
-  {name:'A100',vram:40,tpp:5000,price:10000,vendor:'nvidia',col:'#7ab3e0'},
-  {name:'A100 80GB',vram:80,tpp:8000,price:15000,vendor:'nvidia',col:'#7ab3e0'},
-  {name:'H100',vram:80,tpp:18000,price:25000,vendor:'nvidia',col:'#5b9bd5'},
-  {name:'H200',vram:141,tpp:18000,price:32000,vendor:'nvidia',col:'#5b9bd5'},
-  {name:'B100',vram:192,tpp:27000,price:35000,vendor:'nvidia',col:'#4285c8'},
-  {name:'B200',vram:180,tpp:37000,price:45000,vendor:'nvidia',col:'#3575bc'},
-  {name:'B300',vram:288,tpp:60000,price:60000,vendor:'nvidia',col:'#2866b0'},
-  {name:'B30A',vram:120,tpp:30000,price:20000,vendor:'nvidia',col:'#4d8fd4'},
-  {name:'H20',vram:96,tpp:6000,price:12000,vendor:'nvidia',col:'#6aa8dc'},
-  {name:'MI250X',vram:128,tpp:9000,price:15000,vendor:'amd',col:'#e07878'},
-  {name:'MI300A',vram:128,tpp:18000,price:20000,vendor:'amd',col:'#d96060'},
-  {name:'MI300X',vram:192,tpp:22000,price:25000,vendor:'amd',col:'#cc4444'},
-  {name:'MI325X',vram:256,tpp:21000,price:30000,vendor:'amd',col:'#c03838'},
-  {name:'MI350X',vram:288,tpp:34000,price:40000,vendor:'amd',col:'#b42020'},
+  {name:'A100',     vendor:'nvidia', vram:40,  price:10000, mem_bw:2.0,  tpp:6000,  col:'#7ab3e0'},
+  {name:'A100 80GB',vendor:'nvidia', vram:80,  price:15000, mem_bw:2.0,  tpp:10500, col:'#7ab3e0'},
+  {name:'H100',     vendor:'nvidia', vram:80,  price:25000, mem_bw:3.35, tpp:18000, col:'#5b9bd5'},
+  {name:'H200',     vendor:'nvidia', vram:141, price:32000, mem_bw:4.8,  tpp:25000, col:'#5b9bd5'},
+  {name:'B100',     vendor:'nvidia', vram:192, price:35000, mem_bw:6.0,  tpp:28000, col:'#4285c8'},
+  {name:'B200',     vendor:'nvidia', vram:180, price:45000, mem_bw:8.0,  tpp:40000, col:'#3575bc'},
+  {name:'B300',     vendor:'nvidia', vram:288, price:60000, mem_bw:10.0, tpp:60000, col:'#2866b0'},
+  {name:'B30A',     vendor:'nvidia', vram:120, price:20000, mem_bw:4.0,  tpp:18000, col:'#4d8fd4'},
+  {name:'H20',      vendor:'nvidia', vram:96,  price:12000, mem_bw:4.0,  tpp:7000,  col:'#6aa8dc'},
+  {name:'MI250X',   vendor:'amd',    vram:128, price:15000, mem_bw:3.2,  tpp:9000,  col:'#e07878'},
+  {name:'MI300A',   vendor:'amd',    vram:128, price:20000, mem_bw:5.2,  tpp:18000, col:'#d96060'},
+  {name:'MI300X',   vendor:'amd',    vram:192, price:25000, mem_bw:5.3,  tpp:22000, col:'#cc4444'},
+  {name:'MI325X',   vendor:'amd',    vram:256, price:30000, mem_bw:6.0,  tpp:25000, col:'#c03838'},
+  {name:'MI350X',   vendor:'amd',    vram:288, price:40000, mem_bw:8.0,  tpp:34000, col:'#b42020'},
 ];
+// Derive cost-efficiency fields in place
+GPU_DATA.forEach(function(g){ g.usdPerTpp = g.price/g.tpp; g.usdPer100Tpp = (g.price/g.tpp)*100; });
 
 // ===== DEBOUNCE =====
 var calcTimer;
@@ -1981,6 +2323,9 @@ if(liDismissed) document.getElementById('li-card').classList.add('hidden');
 renderProviderTable();
 renderHProviderTable();
 renderDedNodeTable();
+// renderHGpuChips — retry until the element exists (handles hidden pages at init)
+// Render chips when hybrid page becomes visible — not at init (element hidden)
+// renderHGpuChips is called by: nav('hybrid'), hybrid tab click, calcHybrid first run
 renderModelChips('all');
 renderQSModels('all');
 buildQSProgress(1);
@@ -1996,7 +2341,7 @@ function handleHash(){
   // Strip ?c=... query from hash for page routing
   var h=raw.split('?')[0];
   if(h==='vg-ops-9x7k'||h==='admin') h='admin';
-  var valid=['home','advanced','saved','hybrid','explorer','admin','fleet'];
+  var valid=['home','advanced','calibrated','saved','hybrid','explorer','admin','fleet'];
   if(!valid.includes(h)) h='home';
   navTo(h,true);
   // Load config after nav if ?c= present
@@ -2026,11 +2371,12 @@ function navTo(page,fromHash){
   var el=document.getElementById('page-'+page);
   if(el) el.classList.add('active');
   var tabs=document.querySelectorAll('.nav-tab');
-  var map={home:0,advanced:2,explorer:3,saved:4,hybrid:5,fleet:6};
+  var map={home:0,advanced:2,calibrated:3,explorer:4,saved:5,hybrid:6,fleet:7};
   if(map[page]!==undefined && tabs[map[page]]) tabs[map[page]].classList.add('active');
   if(!fromHash) location.hash='#'+page;
   if(page==='advanced') calc();
-  if(page==='hybrid') calcHybrid();
+  if(page==='calibrated') initCalibratedPage();
+  if(page==='hybrid'){calcHybrid();renderHGpuChips();}
   if(page==='explorer') loadExplorer(); // lazy — Chart.js loads only here
   if(page==='saved') renderSaved();
   if(page==='admin'){var tok=localStorage.getItem('admin_token');if(tok) checkAdminTokenValue(tok);}
@@ -2123,83 +2469,152 @@ function openLayer(id){
 }
 
 // ===== CORE MATH =====
-function weightsGB(){ return S.params * (S.prec==='fp16'?2:S.prec==='fp8'?1:0.5); }
+function weightsGB(p){ var o=p||S; return o.params * (o.prec==='fp16'?2:o.prec==='fp8'?1:0.5); }
 
-function kvBytesPerToken(){
-  // numKvHeads already IS the reduced KV head count for GQA models
-  // (e.g. Llama 70B: numKvHeads=8, not 80)
-  // No extra kvFactor needed — applying one causes 8x underestimate
-  var kvPrec = S.kvPrec==='fp16'?2:S.kvPrec==='fp8'?1:1;
-  
-  // For Gemma 4 / shared KV cache models: use kvLayers if set
-  // kvLayers = number of layers with UNIQUE KV cache (rest share)
-  var effectiveLayers = S.kvLayers || S.numLayers;
-  
-  // For MoE models: only active experts need KV cache
-  // activeExperts = experts used per token (e.g. 2 of 8 for Mixtral)
-  var moeScale = S.activeExperts ? (S.activeExperts / (S.totalExperts||S.activeExperts)) : 1.0;
-  
-  return 2 * effectiveLayers * S.numKvHeads * S.headDim * kvPrec * moeScale;
+function kvBytesPerToken(p){
+  // Architecture-aware KV cache calculation
+  // Returns bytes per token per replica (not per layer — total across all KV-active layers)
+  var o=p||S;
+  var kvPrec = o.kvPrec==='fp16'?2:o.kvPrec==='fp8'?1:1;
+
+  // Category 5: DeepSeek MLA — compressed latent KV
+  if(o.kvLoraRank){
+    var ropeHead = o.qkRopeHeadDim||64;
+    return (o.kvLoraRank + ropeHead) * kvPrec * o.numLayers;
+  }
+
+  // Category 4: Hybrid SSM — only attention layers have KV cache
+  // Category 3: Hybrid sliding/global — handled in kvGBPerUser for full accuracy
+  // Category 1/2/6: Standard + MoE — all layers, no moeScale (MoE doesn't affect KV)
+  var effectiveLayers = o.kvLayers || o.numLayers;
+
+  return 2 * effectiveLayers * o.numKvHeads * o.headDim * kvPrec;
 }
 
-function kvGBPerUser(){
-  var bytes = kvBytesPerToken() * S.ctx * 1000;
-  var eff = S.fw==='vllm' ? 0.95 : 1.0;
-  var prefix = 1 - S.hitrate;
+function kvGBPerUser(p){
+  var o=p||S;
+  var eff = o.fw==='vllm' ? 0.95 : 1.0;
+  var prefix = 1 - (o.hitrate||0);
+  var ctxTokens = o.ctx * 1000;
+
+  // Category 3: Hybrid sliding/global — split global vs sliding KV
+  if(o.kvArchType==='hybrid_sliding' && o.kvGlobalLayers!=null){
+    var kvPrec = o.kvPrec==='fp16'?2:o.kvPrec==='fp8'?1:1;
+    var gHeads = o.globalKvHeads || o.numKvHeads;
+    var gDim = o.globalHeadDim || o.headDim;
+    var sWin = o.slidingWindow || 1024;
+
+    var globalBytes = o.kvGlobalLayers * ctxTokens * 2 * gHeads * gDim * kvPrec;
+    var slidingTokens = Math.min(ctxTokens, sWin);
+    var slidingBytes = o.kvSlidingLayers * slidingTokens * 2 * o.numKvHeads * o.headDim * kvPrec;
+
+    return ((globalBytes + slidingBytes) / 1e9) * prefix / eff;
+  }
+
+  // All other architectures: standard path
+  var bytes = kvBytesPerToken(o) * ctxTokens;
   return (bytes / 1e9) * prefix / eff;
 }
 
 function overhead(){ return Math.max(0.5, weightsGB()*0.12); }
 
+// ── Shared memory/KV fit logic — called by both compute() (Capacity) and calcCalGPUs (Performance) ──
+// p: { vramPerGpu, userTp, users, fw, wGB, kvPU }
+// Returns: { autoTp, ohGB, totalVram, avail, upr, replicas, totalGPUs, vramPct, overflow, tpMinRequired, tpAutoScaled }
+function computeMemoryFit(p){
+  var vramPerGpu = p.vramPerGpu;
+  var wGB        = p.wGB;
+  var kvPU       = p.kvPU;
+  var userTp     = p.userTp || 1;
+  var users      = p.users  || 1;
+  var fw         = p.fw     || 'trtllm';
+
+  var ohPerGpu = Math.max(0.5, vramPerGpu * 0.08);
+  var tpOptions = [1,2,4,8];
+  var minTp = 8;
+  for(var ti=0; ti<tpOptions.length; ti++){
+    var tp = tpOptions[ti];
+    if(wGB/tp + ohPerGpu < vramPerGpu * 0.95){ minTp = tp; break; }
+  }
+  var autoTp    = Math.max(userTp, minTp);
+  var ohGB      = ohPerGpu * autoTp;
+  var totalVram = vramPerGpu * autoTp;
+  var avail     = (totalVram - wGB - ohGB) * (fw==='vllm' ? 0.95 : 0.85);
+  avail = Math.max(avail, 0.1);
+  var upr       = Math.max(1, Math.floor(avail / kvPU));
+  var replicas  = Math.ceil(users / upr);
+  var totalGPUs = replicas * autoTp;
+  var vramPct   = Math.min((wGB + ohGB + kvPU*Math.min(users,upr)) / totalVram * 100, 100);
+  var overflow  = (wGB/8 + ohPerGpu) >= vramPerGpu;
+  return {autoTp, ohGB, totalVram, avail, upr, replicas,
+          totalGPUs, gpuPerReplica:autoTp,
+          vramPct, overflow, tpMinRequired:minTp, tpAutoScaled:autoTp>userTp};
+}
+
 function compute(){
   var wGB = weightsGB();
+  var kvPU = kvGBPerUser();
+
+  // ── Memory/KV fit — delegated to shared computeMemoryFit() ──
+  var M = computeMemoryFit({
+    vramPerGpu: S.gpuVram,
+    userTp:     S.tp,
+    users:      S.users,
+    fw:         S.fw,
+    wGB:        wGB,
+    kvPU:       kvPU
+  });
+  var autoTp = M.autoTp, ohGB = M.ohGB, totalVram = M.totalVram;
+  var avail = M.avail, upr = M.upr, replicas = M.replicas;
+  var gpuPerReplica = M.gpuPerReplica, totalGPUs = M.totalGPUs;
   var vramPerGpu = S.gpuVram;
 
-  // ── Auto-TP: find minimum TP so model fits on GPU ─────────────────────────
-  // Overhead is per-GPU (framework, activations) = 8% of GPU VRAM
-  var ohPerGpu = Math.max(0.5, vramPerGpu * 0.08);
-  var tpOptions = [1, 2, 4, 8];
-  var minTp = 8; // default: assume needs max TP
-  for (var ti = 0; ti < tpOptions.length; ti++) {
-    var tp = tpOptions[ti];
-    var wPerGpu = wGB / tp;
-    if (wPerGpu + ohPerGpu < vramPerGpu * 0.95) {
-      minTp = tp;
-      break;
-    }
+  // ── llm-d disaggregated mode ────────────────────────────────────────────
+  // Prefill and decode run on separate GPU pools
+  // Prefill: compute-heavy, no KV cache needed (short-lived)
+  // Decode: memory-heavy, KV cache lives here
+  var llmdInfo = null;
+  if(S.mode==='llmd'){
+    // Decode pool: sized by KV cache (same as standard replicas)
+    var decodeGpus = Math.max(autoTp, S.dcGpus * autoTp);
+    var decodeReplicas = Math.max(1, Math.ceil(decodeGpus / autoTp));
+    // Recalculate: each decode replica serves upr users
+    var decodeUpr = upr;
+    decodeReplicas = Math.ceil(S.users / decodeUpr);
+    decodeGpus = decodeReplicas * autoTp;
+
+    // Prefill pool: compute-bound, sized by throughput not memory
+    // User sets prefill GPUs directly — these handle initial prompt processing
+    var prefillGpus = Math.max(autoTp, S.pfGpus * autoTp);
+
+    totalGPUs = decodeGpus + prefillGpus;
+    replicas = decodeReplicas; // for display — "replicas" refers to decode replicas
+
+    llmdInfo = {
+      prefillGpus: prefillGpus,
+      decodeGpus: decodeGpus,
+      decodeReplicas: decodeReplicas,
+      prefillReplicas: Math.ceil(prefillGpus / autoTp)
+    };
   }
-  
-  // Use the larger of: user-selected TP or minimum required TP
-  var autoTp = Math.max(S.tp, minTp);
-  var ohGB = ohPerGpu * autoTp; // total overhead across all GPUs in replica
-  
-  var kvPU = kvGBPerUser();
-  
-  // KV available = (total VRAM across TP GPUs - weights - overhead) * packing
-  var totalVram = vramPerGpu * autoTp;
-  var avail = (totalVram - wGB - ohGB) * (S.fw==='vllm'?0.95:0.85);
-  avail = Math.max(avail, 0.1);
-  
-  var upr = Math.max(1, Math.floor(avail / kvPU));
-  var replicas = Math.ceil(S.users / upr);
-  var gpuPerReplica = autoTp;
-  var totalGPUs = replicas * gpuPerReplica;
+
   var kvTotal = kvPU * S.users;
-  var vramPct = Math.min((wGB + ohGB + kvPU*Math.min(S.users,upr)) / totalVram * 100, 100);
-  
-  // Overflow: model doesn't fit even at TP=8
-  var overflow = (wGB / 8 + ohPerGpu) >= vramPerGpu;
-  var tpAutoScaled = autoTp > S.tp;
-  var tpMinRequired = minTp;
+  var vramPct       = M.vramPct;
+  var overflow      = M.overflow;
+  var tpAutoScaled  = M.tpAutoScaled;
+  var tpMinRequired = M.tpMinRequired;
   
   var costPerGPUHr = S.cloudRate * (1-S.disc);
-  var cloudCost5yr = totalGPUs * costPerGPUHr * 8760 * 5;
+  var cloudMo = totalGPUs * costPerGPUHr * 730; // 730 hrs/mo avg
+  var cloudCost5yr = cloudMo * 12 * 5;
   var hwTotal = totalGPUs * S.hwCost;
-  var onpremCost5yr = hwTotal + hwTotal*S.infraPct + hwTotal*S.opexPct*5;
+  var powerMo = totalGPUs * 0.7 * S.kwh * 730;
+  var onpremMo = hwTotal / (S.amort * 12) + powerMo + (hwTotal * S.opexPct / 12);
+  var onpremCost5yr = onpremMo * S.amort * 12 + hwTotal * S.infraPct;
   
   return {wGB,ohGB,kvPU,avail,upr,replicas,totalGPUs,gpuPerReplica,
-          kvTotal,vramPct,costPerGPUHr,cloudCost5yr,onpremCost5yr,
-          autoTp,tpAutoScaled,tpMinRequired,overflow};
+          kvTotal,vramPct,costPerGPUHr,cloudCost5yr,onpremCost5yr,cloudMo,onpremMo,
+          autoTp,tpAutoScaled,tpMinRequired,overflow,llmdInfo};
 }
 
 function fmtGB(n){ return n>=1?n.toFixed(1)+' GB':Math.round(n*1000)+' MB'; }
@@ -2234,6 +2649,7 @@ function usersToPos(n){
   return Math.round((Math.log(Math.max(1,n))-minV)/(maxV-minV)*100);
 }
 function fmtK(n){ return '$'+Math.round(n/1000)+'K'; }
+function fmtMo(n){ return n>=1000?'$'+(n/1000).toFixed(1)+'K':'$'+Math.round(n); }
 function fmtNum(n){ return n.toLocaleString(); }
 
 // ===== MAIN CALC =====
@@ -2243,11 +2659,12 @@ function calc(){
   document.getElementById('outcome-subtitle').textContent =
     S.modelLabel+' · '+S.users+' users · '+S.ctx+'K ctx · TP='+C.autoTp;
   document.getElementById('ph-model-sum').textContent =
-    S.modelLabel+' · '+(S.attn==='gqa'?'GQA':'MHA')+' · '+S.prec.toUpperCase();
+    S.modelLabel+' · '+(S.attn==='gqa'?'GQA':'MHA')+' · '+S.prec.toUpperCase()
+    +(S.kvArchType && S.kvArchType!=='standard' && S.kvArchType!=='moe' ? ' · '+({hybrid_sliding:'Hybrid attn',hybrid_ssm:'Hybrid SSM',mla:'MLA'}[S.kvArchType]||S.kvArchType) : '');
   document.getElementById('ph-users-sum').textContent =
     S.users+' users · '+S.ctx+'K ctx · '+Math.round(S.hitrate*100)+'% prefix';
   document.getElementById('ph-inf-sum').textContent =
-    (S.fw==='vllm'?'vLLM':'Naive')+' · '+(S.mode==='llmd'?'llm-d':'standard')+' · TP='+C.autoTp;
+    (S.fw==='vllm'?'vLLM':'Naive')+' · '+(S.mode==='llmd'?'llm-d ('+S.pfGpus+'pf+'+S.dcGpus+'dc)':'standard')+' · TP='+C.autoTp;
   document.getElementById('ph-cost-sum').textContent =
     S.dep+' · GCP $'+S.cloudRate.toFixed(2)+'/hr · '+(S.disc>0?'-'+Math.round(S.disc*100)+'%':'no discount');
   // ── BUG-027: TP warning banners ─────────────────────────────────────────
@@ -2324,28 +2741,48 @@ function calc(){
   document.getElementById('st-wt').textContent=fmtGB(C.wGB);
   document.getElementById('st-wt-sub').textContent='+'+fmtGB(C.ohGB)+' overhead';
   document.getElementById('st-kv').textContent=fmtGB(C.avail)+(C.autoTp>1?' ('+C.autoTp+'× GPU)':'');
-  document.getElementById('st-kv-sub').textContent='per replica ('+(S.fw==='vllm'?'95%':'85%')+' PA)'+(C.autoTp>1?' · '+C.autoTp+' GPUs':' · 1 GPU');
+  document.getElementById('st-kv-sub').textContent='per replica ('+(S.fw==='vllm'?'95% vLLM':'85% naive')+' PA)'+(C.autoTp>1?' · '+C.autoTp+' GPUs':' · 1 GPU');
   document.getElementById('st-kpu').textContent=fmtGB(C.kvPU);
   var kvBytes=kvBytesPerToken();
   var kvTokLabel=kvBytes>=1e6?(kvBytes/1e6).toFixed(2)+' MB/tok':Math.round(kvBytes/1000)+' KB/tok';
-  document.getElementById('st-kpu-sub').textContent=kvTokLabel+' · '+S.ctx+'K ctx';
+  // Show architecture-aware formula breakdown
+  var kvFormula = kvTokLabel+' · '+S.ctx+'K ctx';
+  if(S.kvArchType==='hybrid_sliding' && S.kvGlobalLayers!=null){
+    kvFormula = S.kvGlobalLayers+'g+'+S.kvSlidingLayers+'s layers · '+S.ctx+'K ctx';
+  } else if(S.kvArchType==='hybrid_ssm' && S.kvLayers){
+    kvFormula = S.kvLayers+' of '+S.numLayers+' layers attn · '+S.ctx+'K ctx';
+  } else if(S.kvArchType==='mla'){
+    kvFormula = 'MLA rank '+S.kvLoraRank+' · '+S.numLayers+'L · '+S.ctx+'K ctx';
+  } else if(S.kvLayers && S.kvLayers !== S.numLayers){
+    kvFormula = S.kvLayers+' of '+S.numLayers+' layers · '+kvTokLabel+' · '+S.ctx+'K ctx';
+  }
+  document.getElementById('st-kpu-sub').textContent=kvFormula;
   document.getElementById('st-upr').textContent=C.upr;
-  document.getElementById('st-upr-sub').textContent=C.replicas+' replicas × '+C.autoTp+'GPU'+(C.tpAutoScaled?' (auto)':'');
+  if(C.llmdInfo){
+    document.getElementById('st-upr-sub').textContent=C.llmdInfo.decodeReplicas+' decode + '+C.llmdInfo.prefillReplicas+' prefill';
+  } else {
+    document.getElementById('st-upr-sub').textContent=C.replicas+' replicas × '+C.autoTp+'GPU'+(C.tpAutoScaled?' (auto)':'');
+  }
   // Outcome cards
   document.getElementById('oc-gpus-val').textContent=C.totalGPUs;
-  document.getElementById('oc-gpus-sub').textContent=S.gpuName+' '+S.gpuVram+'GB · '+C.replicas+' replicas';
+  if(C.llmdInfo){
+    document.getElementById('oc-gpus-sub').textContent=S.gpuName+' '+S.gpuVram+'GB · '+C.llmdInfo.prefillGpus+'pf + '+C.llmdInfo.decodeGpus+'dc';
+  } else {
+    document.getElementById('oc-gpus-sub').textContent=S.gpuName+' '+S.gpuVram+'GB · '+C.replicas+' replicas';
+  }
   var fits=!C.overflow && (C.wGB+C.ohGB+C.kvPU<=(S.gpuVram*C.autoTp));
   document.getElementById('oc-gpus-badge').textContent=fits?'fits ✓':'needs multi-GPU';
   document.getElementById('oc-gpus-badge').className='oc-badge '+(fits?'good':'bad');
-  document.getElementById('oc-cost-val').textContent=fmtK(C.cloudCost5yr);
-  document.getElementById('oc-cost-sub').textContent='GCP · on-demand · 5yr';
-  if(document.getElementById('oc-onprem-val')) document.getElementById('oc-onprem-val').textContent=fmtK(C.onpremCost5yr);
-  if(document.getElementById('oc-onprem-sub')) document.getElementById('oc-onprem-sub').textContent='hardware · '+S.amort+'yr amort';
-  var cheaper = C.onpremCost5yr < C.cloudCost5yr;
-  var diff = Math.abs(C.cloudCost5yr - C.onpremCost5yr);
+  document.getElementById('oc-cost-val').textContent=fmtMo(C.cloudMo)+'/mo';
+  var activeProv = (typeof PROVIDERS!=='undefined'&&PROVIDERS.find(function(p){return p.active;}))||{name:'GCP'};
+  document.getElementById('oc-cost-sub').textContent=activeProv.name+' · '+fmtK(C.cloudCost5yr)+' over 5yr';
+  if(document.getElementById('oc-onprem-val')) document.getElementById('oc-onprem-val').textContent=fmtMo(C.onpremMo)+'/mo';
+  if(document.getElementById('oc-onprem-sub')) document.getElementById('oc-onprem-sub').textContent=S.amort+'yr amort · '+fmtK(C.onpremCost5yr)+' total';
+  var cheaper = C.onpremMo < C.cloudMo;
+  var diff = Math.abs(C.cloudMo - C.onpremMo);
   var verdictEl = document.getElementById('oc-cost-verdict');
   if(verdictEl){
-    verdictEl.textContent = cheaper ? '⬛ On-prem saves '+fmtK(diff)+' over 5yr' : '☁ Cloud saves '+fmtK(diff)+' over 5yr';
+    verdictEl.textContent = cheaper ? '⬛ On-prem saves '+fmtMo(diff)+'/mo' : '☁ Cloud saves '+fmtMo(diff)+'/mo';
     verdictEl.style.color = cheaper ? 'var(--green)' : 'var(--red)';
   }
   document.getElementById('oc-vram-val').textContent=Math.round(C.vramPct)+'%';
@@ -2567,6 +3004,18 @@ function qsComplete(){
     S.numLayers=qsData.model.layers;
     S.numKvHeads=qsData.model.kvHeads;
     S.headDim=qsData.model.headDim;
+    // Architecture-specific KV fields
+    S.kvArchType=qsData.model.kvArchType||null;
+    S.kvLayers=qsData.model.kvLayers||null;
+    S.kvGlobalLayers=qsData.model.kvGlobalLayers!=null?qsData.model.kvGlobalLayers:null;
+    S.kvSlidingLayers=qsData.model.kvSlidingLayers!=null?qsData.model.kvSlidingLayers:null;
+    S.slidingWindow=qsData.model.slidingWindow||null;
+    S.globalKvHeads=qsData.model.globalKvHeads||null;
+    S.globalHeadDim=qsData.model.globalHeadDim||null;
+    S.kvLoraRank=qsData.model.kvLoraRank||null;
+    S.qkRopeHeadDim=qsData.model.qkRopeHeadDim||null;
+    S.activeExperts=qsData.model.activeExperts||null;
+    S.totalExperts=qsData.model.totalExperts||null;
   }
   S.users=qsData.users;
   S.ctx=qsData.ctx;
@@ -2594,7 +3043,14 @@ function selectQSModel(idx,btn){
   var m=_qsFilteredModels[idx];
   if(m){
     S.params=m.params;S.modelLabel=m.name;S.attn=m.attn;
-    S.numLayers=m.layers;S.numKvHeads=m.kvHeads;S.headDim=m.headDim;
+    S.numLayers=m.layers;S.numKvHeads=m.kvHeads;S.numHeads=m.numHeads||m.kvHeads*4||32;S.headDim=m.headDim;
+    S.kvArchType=m.kvArchType||null;S.kvLayers=m.kvLayers||null;
+    S.kvGlobalLayers=m.kvGlobalLayers!=null?m.kvGlobalLayers:null;
+    S.kvSlidingLayers=m.kvSlidingLayers!=null?m.kvSlidingLayers:null;
+    S.slidingWindow=m.slidingWindow||null;S.globalKvHeads=m.globalKvHeads||null;
+    S.globalHeadDim=m.globalHeadDim||null;S.kvLoraRank=m.kvLoraRank||null;
+    S.qkRopeHeadDim=m.qkRopeHeadDim||null;
+    S.activeExperts=m.activeExperts||null;S.totalExperts=m.totalExperts||null;
     document.getElementById('ph-model-sum').textContent=m.name+' · '+(m.attn==='gqa'?'GQA':'MHA')+' · '+S.prec.toUpperCase();
     // Highlight Next button to guide user
     var nextBtn=document.querySelector('#qs-s1 .btn-primary');
@@ -2623,6 +3079,50 @@ function selectQSLoc(loc,btn){
   document.querySelectorAll('.qs-loc-tile').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on');
 }
+// ===== HF TOKEN MANAGEMENT =====
+function toggleHFToken(prefix){
+  var body=document.getElementById(prefix+'-hf-token-body');
+  if(!body)return;
+  body.style.display=body.style.display==='none'?'block':'none';
+  // Pre-fill if token exists
+  var existing=localStorage.getItem('hf_token')||'';
+  var inp=document.getElementById(prefix+'-hf-token');
+  if(inp&&existing&&!inp.value) inp.value=existing;
+}
+function saveHFToken(prefix){
+  var inp=document.getElementById(prefix+'-hf-token');
+  if(!inp)return;
+  var token=inp.value.trim();
+  if(token){
+    localStorage.setItem('hf_token',token);
+    inp.type='password';
+    // Update both toggle labels
+    document.querySelectorAll('.hf-token-toggle').forEach(function(a){
+      a.textContent='🔑 HF token saved ✓ (click to update)';
+      a.classList.add('saved');
+    });
+    // Sync the other input too
+    var otherId=(prefix==='qs'?'adv':'qs')+'-hf-token';
+    var other=document.getElementById(otherId);
+    if(other) other.value=token;
+  } else {
+    localStorage.removeItem('hf_token');
+    document.querySelectorAll('.hf-token-toggle').forEach(function(a){
+      a.textContent='🔑 Have a gated model? Paste your HF token';
+      a.classList.remove('saved');
+    });
+  }
+}
+// On load: update toggle labels if token already saved
+(function(){
+  if(localStorage.getItem('hf_token')){
+    document.querySelectorAll('.hf-token-toggle').forEach(function(a){
+      a.textContent='🔑 HF token saved ✓ (click to update)';
+      a.classList.add('saved');
+    });
+  }
+})();
+
 function qsHFLookup(){
   var id=document.getElementById('qs-hf-input').value.trim();
   if(!id)return;
@@ -2638,16 +3138,52 @@ function hfLookup(){
   if(!id)return;
   fetchHFModel(id,'hf-status',function(m){
     S.params=m.params;S.modelLabel=m.name;S.attn=m.attn;
-    S.numLayers=m.layers;S.numKvHeads=m.kvHeads;S.headDim=m.headDim;
+    S.numLayers=m.layers;S.numKvHeads=m.kvHeads;S.numHeads=m.numHeads||m.kvHeads*4||32;S.headDim=m.headDim;
+    // Architecture-specific KV fields
+    S.kvArchType=m.kvArchType||null;
+    S.kvLayers=m.kvLayers||null;
+    S.kvGlobalLayers=m.kvGlobalLayers!=null?m.kvGlobalLayers:null;
+    S.kvSlidingLayers=m.kvSlidingLayers!=null?m.kvSlidingLayers:null;
+    S.slidingWindow=m.slidingWindow||null;
+    S.globalKvHeads=m.globalKvHeads||null;
+    S.globalHeadDim=m.globalHeadDim||null;
+    S.kvLoraRank=m.kvLoraRank||null;
+    S.qkRopeHeadDim=m.qkRopeHeadDim||null;
+    S.activeExperts=m.activeExperts||null;
+    S.totalExperts=m.totalExperts||null;
     calc();
   });
 }
 function fetchHFModel(id,statusId,cb){
   var st=document.getElementById(statusId);
   if(!id){st.textContent='Enter a model ID first';st.className='hf-status err';return;}
+  // Validate format: must contain org/model
+  if(id.indexOf('/')<1){
+    st.innerHTML='✗ Missing org prefix — try <b>org/model-name</b><br>'
+      +'<span style="font-size:10px;color:var(--text4)">e.g. meta-llama/Llama-3.1-8B, deepseek-ai/DeepSeek-R1-Distill-Qwen-32B</span>';
+    st.className='hf-status err';return;
+  }
   st.textContent='Fetching from HuggingFace...';st.className='hf-status';
-  var url=HF_PROXY?HF_PROXY+'?id='+encodeURIComponent(id):'https://huggingface.co/api/models/'+encodeURIComponent(id);
-  fetch(url).then(function(r){
+  var hfToken=localStorage.getItem('hf_token')||'';
+  var url,useDirectHF=false;
+  if(HF_PROXY){
+    url=HF_PROXY+'?id='+encodeURIComponent(id);
+    if(hfToken) url+='&token='+encodeURIComponent(hfToken);
+  } else if(hfToken) {
+    // No proxy but have token — go direct to HF with auth
+    url='https://huggingface.co/api/models/'+encodeURIComponent(id);
+    useDirectHF=true;
+  } else {
+    url='https://huggingface.co/api/models/'+encodeURIComponent(id);
+  }
+  var fetchOpts={};
+  if(useDirectHF&&hfToken) fetchOpts.headers={'Authorization':'Bearer '+hfToken};
+  fetch(url,fetchOpts).then(function(r){
+    if(r.status===401||r.status===403){
+      var hasToken=!!hfToken;
+      throw {gated:true,hasToken:hasToken,status:r.status};
+    }
+    if(r.status===404) throw {notFound:true};
     if(!r.ok) throw new Error('HTTP '+r.status);
     return r.json();
   }).then(function(d){
@@ -2655,33 +3191,180 @@ function fetchHFModel(id,statusId,cb){
     var cfg=d.config||{};
     var params=d.safetensors&&d.safetensors.total?d.safetensors.total/1e9:
       cfg.num_parameters?cfg.num_parameters/1e9:
-      (cfg.num_hidden_layers||32)*(cfg.hidden_size||4096)*4/1e9*3;
+      12*(cfg.num_hidden_layers||32)*Math.pow(cfg.hidden_size||4096,2)/1e9;
     params=Math.max(1,Math.round(params));
+
+    // Base fields (every model has these)
+    var layers = cfg.num_hidden_layers||32;
+    var numHeads = cfg.num_attention_heads||32;
+    var kvHeads = cfg.num_key_value_heads||numHeads;
+    var headDim = cfg.head_dim||(Math.round((cfg.hidden_size||4096)/numHeads));
+    var attn = (cfg.num_key_value_heads&&cfg.num_key_value_heads<numHeads)?'gqa':'mha';
+
+    // ===== ARCHITECTURE DETECTION (6 categories) =====
+    var kvArchType='standard', kvLayers=null, kvGlobalLayers=null, kvSlidingLayers=null;
+    var slidingWindow=null, globalKvHeads=null, globalHeadDim=null;
+    var kvLoraRank=null, qkRopeHeadDim=null;
+    var activeExperts=null, totalExperts=null;
+    var archLabel = 'Standard';
+
+    // Cat 5: DeepSeek MLA — check first (most specific)
+    if(cfg.kv_lora_rank){
+      kvArchType='mla';
+      kvLoraRank=cfg.kv_lora_rank;
+      qkRopeHeadDim=cfg.qk_rope_head_dim||64;
+      archLabel='MLA (DeepSeek)';
+    }
+    // Cat 6: Hybrid linear attention (Qwen3-Next)
+    else if(cfg.linear_key_head_dim){
+      // Linear layers = fixed state (like SSM), standard layers = normal KV
+      // For now, treat as standard with reduced layers (conservative)
+      var attLayers = 0;
+      if(Array.isArray(cfg.layer_types)){
+        for(var li=0;li<cfg.layer_types.length;li++){
+          var lt=cfg.layer_types[li];
+          if(lt==='full_attention'||lt==='attention'||lt==='full'||lt==='global') attLayers++;
+        }
+      } else { attLayers = layers; }
+      kvLayers = attLayers || layers;
+      kvArchType='standard';
+      archLabel='Hybrid linear ('+kvLayers+' attn layers)';
+    }
+    // Cat 3/4: Has layer_types or layers_block_type array — inspect values
+    // Different models use different field names:
+    //   layer_types:       Gemma 4, LiquidAI (values: sliding/full/conv/full_attention)
+    //   layers_block_type: Zamba2 (values: mamba/hybrid)
+    var layerArr = Array.isArray(cfg.layer_types) && cfg.layer_types.length>0 ? cfg.layer_types :
+                   Array.isArray(cfg.layers_block_type) && cfg.layers_block_type.length>0 ? cfg.layers_block_type : null;
+
+    // Also check hybrid_layer_ids (Zamba2 shortcut — directly lists attention layer indices)
+    if(!layerArr && Array.isArray(cfg.hybrid_layer_ids) && cfg.hybrid_layer_ids.length>0){
+      kvArchType='hybrid_ssm';
+      kvLayers = cfg.hybrid_layer_ids.length;
+      // Use kv_channels if available for head_dim override
+      if(cfg.kv_channels) headDim = cfg.kv_channels;
+      archLabel='Hybrid SSM ('+kvLayers+' attn of '+layers+' total)';
+    }
+    else if(layerArr){
+      var ltSet={};
+      layerArr.forEach(function(t){ ltSet[t]=true; });
+
+      if(ltSet['sliding'] && (ltSet['full']||ltSet['global'])){
+        // Cat 3: Hybrid sliding/global (Gemma 4)
+        kvArchType='hybrid_sliding';
+        var gCount=0, sCount=0;
+        layerArr.forEach(function(t){
+          if(t==='full'||t==='global') gCount++;
+          else if(t==='sliding') sCount++;
+        });
+        var shared = cfg.num_kv_shared_layers||0;
+        // Shared layers are the LAST N — walk from end to count types
+        var sharedG=0, sharedS=0;
+        if(shared>0){
+          for(var si=layerArr.length-1;si>=0&&(sharedG+sharedS)<shared;si--){
+            if(layerArr[si]==='full'||layerArr[si]==='global') sharedG++;
+            else if(layerArr[si]==='sliding') sharedS++;
+          }
+        }
+        kvGlobalLayers = gCount - sharedG;
+        kvSlidingLayers = sCount - sharedS;
+        slidingWindow = cfg.sliding_window||1024;
+        globalKvHeads = cfg.num_global_key_value_heads||kvHeads;
+        globalHeadDim = cfg.global_head_dim||headDim;
+        kvLayers = kvGlobalLayers + kvSlidingLayers;
+        archLabel='Hybrid sliding/global ('+kvGlobalLayers+'g+'+kvSlidingLayers+'s, '+shared+' shared)';
+      }
+      else if(ltSet['conv']||ltSet['mamba']||ltSet['ssm']||ltSet['recurrent']){
+        // Cat 4: Hybrid SSM/attention (LiquidAI, Bamba, Zamba2)
+        kvArchType='hybrid_ssm';
+        var attLayers2=0;
+        layerArr.forEach(function(t){
+          if(t.indexOf('attention')>=0||t==='full'||t==='global'||t==='hybrid') attLayers2++;
+        });
+        kvLayers = attLayers2 || 1;
+        // Zamba2: use kv_channels for head_dim if available
+        if(cfg.kv_channels) headDim = cfg.kv_channels;
+        archLabel='Hybrid SSM ('+kvLayers+' attn of '+layers+' total)';
+      }
+      else {
+        // Unknown layer_types values — count anything attention-like
+        var attLayers3=0;
+        layerArr.forEach(function(t){
+          if(t.indexOf('attention')>=0||t.indexOf('full')>=0||t.indexOf('global')>=0||t==='hybrid') attLayers3++;
+        });
+        kvLayers = attLayers3 || layers;
+        archLabel='Hybrid ('+kvLayers+' attn of '+layers+' total)';
+      }
+    }
+    // Cat 4: Jamba-style (no layer_types array, but attn_layer_period)
+    else if(cfg.attn_layer_period){
+      kvArchType='hybrid_ssm';
+      var attPeriod = cfg.attn_layer_period;
+      var attOffset = cfg.attn_layer_offset||1;
+      kvLayers = Math.floor((layers - attOffset) / attPeriod) + 1;
+      archLabel='Hybrid SSM/Jamba ('+kvLayers+' attn of '+layers+' total)';
+    }
+
+    // Cat 2: MoE — detected separately, doesn't change KV formula
+    if(cfg.num_local_experts||cfg.num_experts){
+      activeExperts = cfg.num_experts_per_tok||cfg.num_activated_experts||2;
+      totalExperts = cfg.num_local_experts||cfg.num_experts||8;
+      if(kvArchType==='standard') kvArchType='moe';
+      archLabel += (archLabel!=='Standard'?' + ':'')+('MoE '+activeExperts+'/'+totalExperts);
+    }
+
     var m={
       name:id.split('/').pop(),
       params:params,
-      layers:cfg.num_hidden_layers||32,
-      kvHeads:cfg.num_key_value_heads||cfg.num_attention_heads||32,
-      headDim:cfg.head_dim||(Math.round((cfg.hidden_size||4096)/(cfg.num_attention_heads||32))),
-      attn:(cfg.num_key_value_heads&&cfg.num_key_value_heads<(cfg.num_attention_heads||32))?'gqa':'mha',
-      // BUG-029/030: Architecture-specific KV modifiers from model type
-      kvLayers:(cfg.model_type==='gemma4'||id.includes('gemma-4'))?Math.round((cfg.num_hidden_layers||60)*0.12):null,
-      activeExperts:(cfg.model_type==='mixtral')?2:null,
-      totalExperts:(cfg.model_type==='mixtral')?(cfg.num_local_experts||8):null,
+      layers:layers,
+      kvHeads:kvHeads,
+      numHeads:numHeads,
+      headDim:headDim,
+      attn:attn,
+      // Architecture-specific
+      kvArchType:kvArchType,
+      kvLayers:kvLayers,
+      kvGlobalLayers:kvGlobalLayers,
+      kvSlidingLayers:kvSlidingLayers,
+      slidingWindow:slidingWindow,
+      globalKvHeads:globalKvHeads,
+      globalHeadDim:globalHeadDim,
+      kvLoraRank:kvLoraRank,
+      qkRopeHeadDim:qkRopeHeadDim,
+      activeExperts:activeExperts,
+      totalExperts:totalExperts,
+      archLabel:archLabel,
       org:'hf'
     };
-    st.textContent='✓ '+m.name+' ('+m.params+'B, '+m.layers+' layers, '+(m.attn==='gqa'?'GQA':'MHA')+')';
+    st.textContent='✓ '+m.name+' ('+m.params+'B, '+m.layers+'L, '+(m.attn==='gqa'?'GQA':'MHA')+', '+archLabel+')';
     st.className='hf-status ok';
     cb(m);
   }).catch(function(e){
-    var msg = e.message||'';
-    var isNetwork = msg.includes('fetch')||msg.includes('network')||msg.includes('Failed')||msg.includes('Load')||msg.includes('NetworkError');
-    if(isNetwork || !HF_PROXY) {
-      st.innerHTML='⚠ Live lookup requires the Worker proxy — pick from the model grid above<br>'
-        +'<span style="font-size:10px;color:var(--text4)">Once Worker is deployed at '+HF_PROXY+', live lookup will work</span>';
-    } else {
+    if(e&&e.gated){
+      if(e.hasToken){
+        st.innerHTML='🔒 Gated model — your token was rejected. Check it has access to <b>'+id+'</b><br>'
+          +'<span style="font-size:10px;color:var(--text4)">Accept the license at huggingface.co/'+id+' then retry</span>';
+      } else {
+        st.innerHTML='🔒 This is a gated model — paste your HuggingFace token below to access it<br>'
+          +'<span style="font-size:10px;color:var(--text4)">Get a free token at huggingface.co/settings/tokens</span>';
+        // Auto-expand token input
+        var prefix=statusId==='qs-hf-status'?'qs':'adv';
+        var body=document.getElementById(prefix+'-hf-token-body');
+        if(body) body.style.display='block';
+      }
+    } else if(e&&e.notFound){
       st.innerHTML='✗ Model not found on HuggingFace — check exact ID<br>'
         +'<span style="font-size:10px;color:var(--text4)">Format: owner/model-name (e.g. meta-llama/Llama-3.1-8B)</span>';
+    } else {
+      var msg = (e&&e.message)||'';
+      var isNetwork = msg.includes('fetch')||msg.includes('network')||msg.includes('Failed')||msg.includes('Load')||msg.includes('NetworkError');
+      if(isNetwork || !HF_PROXY) {
+        st.innerHTML='⚠ Live lookup requires the Worker proxy — pick from the model grid above<br>'
+          +'<span style="font-size:10px;color:var(--text4)">Once Worker is deployed at '+HF_PROXY+', live lookup will work</span>';
+      } else {
+        st.innerHTML='✗ Lookup failed: '+(msg||'unknown error')+'<br>'
+          +'<span style="font-size:10px;color:var(--text4)">Format: owner/model-name (e.g. meta-llama/Llama-3.1-8B)</span>';
+      }
     }
     st.className='hf-status err';
   });
@@ -2699,11 +3382,20 @@ function selectModel(idx,btn){
   var m=_filteredModels[idx];
   if(!m)return;
   S.params=m.params;S.modelLabel=m.name;S.attn=m.attn;
-  S.numLayers=m.layers;S.numKvHeads=m.kvHeads;S.headDim=m.headDim;
-  // BUG-029/030: Architecture-specific KV modifiers
-  S.kvLayers=m.kvLayers||null;          // shared KV cache (Gemma 4)
-  S.activeExperts=m.activeExperts||null; // MoE active experts (Mixtral)
+  S.numLayers=m.layers;S.numKvHeads=m.kvHeads;S.numHeads=m.numHeads||m.kvHeads*4||32;S.headDim=m.headDim;
+  // Architecture-specific KV modifiers
+  S.kvLayers=m.kvLayers||null;
+  S.activeExperts=m.activeExperts||null;
   S.totalExperts=m.totalExperts||null;
+  // Reset dynamic arch fields (presets don't use these yet)
+  S.kvArchType=m.kvArchType||null;
+  S.kvGlobalLayers=m.kvGlobalLayers!=null?m.kvGlobalLayers:null;
+  S.kvSlidingLayers=m.kvSlidingLayers!=null?m.kvSlidingLayers:null;
+  S.slidingWindow=m.slidingWindow||null;
+  S.globalKvHeads=m.globalKvHeads||null;
+  S.globalHeadDim=m.globalHeadDim||null;
+  S.kvLoraRank=m.kvLoraRank||null;
+  S.qkRopeHeadDim=m.qkRopeHeadDim||null;
   document.querySelectorAll('#model-chips .chip').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on');
   if(m.name.includes('W8A8')) setPrec('fp8',null);
@@ -2721,7 +3413,21 @@ function filterOrg(org,btn){
 }
 
 // ===== SETTERS =====
-function setAttn(a,btn){S.attn=a;document.querySelectorAll('#ps-model .chip').forEach(b=>{if(b.id&&b.id.startsWith('attn'))b.classList.remove('on')});if(btn)btn.classList.add('on');calc();}
+function setAttn(a,btn){
+  S.attn=a;
+  // Update KV heads when switching attn type manually
+  if(a==='mha'){
+    // MHA: all query heads become KV heads
+    S.numKvHeads=S.numHeads;
+  } else if(a==='gqa'){
+    // GQA: reasonable default — 1/4 of query heads, min 1
+    // User should re-select model to get exact ratio
+    S.numKvHeads=Math.max(1,Math.round(S.numHeads/4));
+  }
+  document.querySelectorAll('#ps-model .chip').forEach(b=>{if(b.id&&b.id.startsWith('attn'))b.classList.remove('on')});
+  if(btn)btn.classList.add('on');
+  calc();
+}
 function setPrec(p,btn){
   S.prec=p;
   ['fp16','fp8','int4'].forEach(function(pp){
@@ -2833,13 +3539,27 @@ function editAnswers(){openQS();}
 
 // ===== PROVIDER TABLE =====
 function renderProviderTable(){
-  var gpuOpts=CLOUD_GPU_OPTIONS.map(function(g){return '<option value="'+g+'">'+g+'</option>';}).join('');
   var h='<tr><th></th><th>Provider</th><th>GPU</th><th>$/hr</th><th></th></tr>';
+  var lpm = (typeof _livePriceMap !== 'undefined' && _livePriceMap) ? _livePriceMap : {};
   PROVIDERS.forEach(function(p,i){
+    // Build GPU options from live prices for this provider, plus Custom
+    var provGpuKeys=Object.keys(lpm).filter(function(k){return k.split('|')[0]===p.name;});
+    var gpuOpts='';
+    if(provGpuKeys.length>0){
+      provGpuKeys.forEach(function(k){
+        var g=k.split('|')[1];
+        var match=CLOUD_GPU_OPTIONS.find(function(o){return o.toUpperCase().indexOf(g)>=0||g.indexOf(o.toUpperCase())>=0;});
+        gpuOpts+='<option value="'+(match||g)+'">'+(match||g)+'</option>';
+      });
+    }else{
+      gpuOpts=CLOUD_GPU_OPTIONS.map(function(g){return '<option value="'+g+'">'+g+'</option>';}).join('');
+      // CLOUD_GPU_OPTIONS already includes Custom — don't add again
+    }
+    if(provGpuKeys.length>0) gpuOpts+='<option value="Custom">Custom</option>';
     h+='<tr>'
       +'<td><input type="radio" class="prov-radio" name="prov" '+(p.active?'checked':'')+' onchange="selectProv('+i+')"></td>'
-      +'<td><input type="text" value="'+p.name+'" style="width:70px;padding:2px 5px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:'+(p.active?'var(--blue)':'var(--text1)')+';font-size:12px;font-weight:'+(p.active?'600':'400')+'" onchange="PROVIDERS['+i+'].name=this.value"></td>'
-      +'<td><select id="aprov-gpu-'+i+'" style="padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:var(--text1);font-size:10px;font-family:var(--mono)" onchange="PROVIDERS['+i+'].gpu=this.value">'+gpuOpts+'</select></td>'
+      +'<td style="font-size:12px;font-weight:'+(p.active?'600':'400')+';color:'+(p.active?'var(--blue)':'var(--text1)')+'">'+p.name+'</td>'
+      +'<td><select id="aprov-gpu-'+i+'" style="padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:var(--text1);font-size:10px;font-family:var(--mono)" onchange="updateProvGpu('+i+',this.value)">'+gpuOpts+'</select></td>'
       +'<td><input type="number" value="'+p.rate.toFixed(2)+'" step="0.01" style="width:58px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:var(--text1);font-family:var(--mono);font-size:11px" onchange="updateProvRate('+i+',+this.value)"></td>'
       +'<td><button class="prov-del" onclick="delProv('+i+')">&#215;</button></td>'
       +'</tr>';
@@ -2852,6 +3572,20 @@ function renderProviderTable(){
 }
 function selectProv(i){PROVIDERS.forEach((p,j)=>p.active=j===i);S.cloudRate=PROVIDERS[i].rate;renderProviderTable();calc();}
 function updateProvRate(i,v){PROVIDERS[i].rate=v;if(PROVIDERS[i].active){S.cloudRate=v;calc();}}
+function updateProvGpu(i,gpu){
+  PROVIDERS[i].gpu=gpu;
+  var name=PROVIDERS[i].name,gpuUp=gpu.toUpperCase();
+  var price=_livePriceMap[name+'|'+gpuUp];
+  if(!price){var keys=Object.keys(_livePriceMap);for(var ki=0;ki<keys.length;ki++){var parts=keys[ki].split('|');if(parts[0]===name&&(parts[1].indexOf(gpuUp)>=0||gpuUp.indexOf(parts[1])>=0)){price=_livePriceMap[keys[ki]];break;}}}
+  if(price) PROVIDERS[i].rate=Math.round(price*100)/100;
+  if(PROVIDERS[i].active){
+    S.cloudRate=PROVIDERS[i].rate;
+    var VM={'H100':80,'H100 SXM':80,'H200':141,'H200 SXM':141,'B100':192,'B100 SXM':192,'B200':180,'B200 SXM':180,'B300':288,'B300 SXM':288,'A100':80,'A100 80GB':80,'A100 40GB':40,'A10G':24,'H20':96,'L40S':48,'MI300X':192,'MI325X':256,'MI350X':288,'A40':48,'A6000':48,'RTX3090':24,'RTX4090':24,'V100':16,'T4':16};
+    var vr=VM[gpu];if(!vr){var gU=gpu.toUpperCase();Object.keys(VM).forEach(function(k){if(!vr&&k.toUpperCase()===gU)vr=VM[k];});if(!vr)Object.keys(VM).forEach(function(k){if(!vr&&(gU.indexOf(k.toUpperCase())>=0||k.toUpperCase().indexOf(gU)>=0))vr=VM[k];});}
+    if(vr){var gb=gpu.replace(/ SXM| PCIe| NVL/gi,'').trim();S.gpuVram=vr;var cb=null;document.querySelectorAll('#gpu-tier-chips .chip').forEach(function(b){if(b.textContent.toUpperCase().indexOf(gb.toUpperCase())>=0)cb=b;});if(cb){var m=cb.getAttribute('onclick').match(/setGPU\('([^']+)'/);if(m)S.gpuName=m[1];document.querySelectorAll('#gpu-tier-chips .chip').forEach(function(b){b.classList.remove('on');});cb.classList.add('on');}else{S.gpuName=gb;}}
+    renderProviderTable();calc();
+  }else{renderProviderTable();}
+}
 function delProv(i){PROVIDERS.splice(i,1);if(!PROVIDERS.some(p=>p.active)&&PROVIDERS.length){PROVIDERS[0].active=true;S.cloudRate=PROVIDERS[0].rate;}renderProviderTable();calc();}
 function addProvider(){
   PROVIDERS.push({name:'Custom',rate:2.50,gpu:'H100 SXM',active:false});
@@ -3239,12 +3973,24 @@ function _doExportSheets() {
 
 // ===== HYBRID =====
 function renderHProviderTable(){
-  var gpuOpts=CLOUD_GPU_OPTIONS.map(function(g){return '<option value="'+g+'">'+g+'</option>';}).join('');
   var h='<tr><th></th><th>Provider</th><th>GPU</th><th>$/hr</th><th></th></tr>';
+  var lpm = (typeof _livePriceMap !== 'undefined' && _livePriceMap) ? _livePriceMap : {};
   PROVIDERS.forEach(function(p,i){
+    var provGpuKeys=Object.keys(lpm).filter(function(k){return k.split('|')[0]===p.name;});
+    var gpuOpts='';
+    if(provGpuKeys.length>0){
+      provGpuKeys.forEach(function(k){
+        var g=k.split('|')[1];
+        var match=CLOUD_GPU_OPTIONS.find(function(o){return o.toUpperCase().indexOf(g)>=0||g.indexOf(o.toUpperCase())>=0;});
+        gpuOpts+='<option value="'+(match||g)+'">'+(match||g)+'</option>';
+      });
+    }else{
+      gpuOpts=CLOUD_GPU_OPTIONS.map(function(g){return '<option value="'+g+'">'+g+'</option>';}).join('');
+    }
+    if(provGpuKeys.length>0) gpuOpts+='<option value="Custom">Custom</option>';
     h+='<tr><td><input type="radio" class="prov-radio" name="hprov" '+(p.active?'checked':'')+' onchange="selectHProv('+i+')"></td>'
-      +'<td><input type="text" value="'+p.name+'" style="width:68px;padding:2px 5px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:'+(p.active?'var(--blue)':'var(--text1)')+';font-size:11px;font-weight:'+(p.active?'600':'400')+'" onchange="PROVIDERS['+i+'].name=this.value"></td>'
-      +'<td><select id="hprov-gpu-'+i+'" style="padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:var(--text1);font-size:10px;font-family:var(--mono)" onchange="PROVIDERS['+i+'].gpu=this.value">'+gpuOpts+'</select></td>'
+      +'<td style="font-size:11px;font-weight:'+(p.active?'600':'400')+';color:'+(p.active?'var(--blue)':'var(--text1)')+'">'+p.name+'</td>'
+      +'<td><select id="hprov-gpu-'+i+'" style="padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:var(--text1);font-size:10px;font-family:var(--mono)" onchange="updateProvGpu('+i+',this.value);renderHProviderTable();calcHybrid()">'+gpuOpts+'</select></td>'
       +'<td><input type="number" value="'+p.rate.toFixed(2)+'" step="0.01" style="width:52px;padding:2px 5px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:var(--text1);font-family:var(--mono);font-size:11px" onchange="updateHProvRate('+i+',+this.value)"></td>'
       +'<td><button class="prov-del" onclick="delHProv('+i+')">&#215;</button></td>'
       +'</tr>';
@@ -3261,12 +4007,23 @@ function renderDedNodeTable(){
   if(!t)return;
   var h='<tr><th></th><th style="font-size:9px">Provider</th><th style="font-size:9px">GPU</th><th style="font-size:9px">N</th><th style="font-size:9px">$/mo</th><th></th></tr>';
   DED_NODES.forEach(function(d,i){
-    // Build options without selected attr — we set .value after render
-    var gpuOpts=GPU_OPTIONS.map(function(g){return '<option value="'+g+'">'+g+'</option>';}).join('');
+    var dedKeys=Object.keys(_liveDedPriceMap).filter(function(k){return k.split('|')[0]===d.name;});
+    var gpuOpts='';
+    if(dedKeys.length>0){
+      dedKeys.forEach(function(k){
+        var g=k.split('|')[1];
+        var match=GPU_OPTIONS.find(function(o){return o.toUpperCase().indexOf(g)>=0||g.indexOf(o.replace(/ SXM| PCIe/gi,'').trim().toUpperCase())>=0;});
+        gpuOpts+='<option value="'+(match||g)+'">'+(match||g)+'</option>';
+      });
+    }else{
+      gpuOpts=GPU_OPTIONS.map(function(g){return '<option value="'+g+'">'+g+'</option>';}).join('');
+      // GPU_OPTIONS already includes Custom — don't add again
+    }
+    if(dedKeys.length>0) gpuOpts+='<option value="Custom">Custom</option>';
     h+='<tr>'
       +'<td><input type="radio" class="prov-radio" name="hded" '+(d.active?'checked':'')+' onchange="selectDedNode('+i+')"></td>'
       +'<td><input type="text" value="'+d.name+'" style="width:62px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:'+(d.active?'var(--blue)':'var(--text1)')+';font-size:10px;font-weight:'+(d.active?'600':'400')+'" onchange="DED_NODES['+i+'].name=this.value"></td>'
-      +'<td><select id="ded-gpu-'+i+'" style="padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:var(--text1);font-size:10px;font-family:var(--mono)" onchange="DED_NODES['+i+'].gpu=this.value;if(DED_NODES['+i+'].active){S.hDedGpus=DED_NODES['+i+'].gpus;}calcHybrid()">'+gpuOpts+'</select></td>'
+      +'<td><select id="ded-gpu-'+i+'" style="padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:var(--text1);font-size:10px;font-family:var(--mono)" onchange="updateDedGpu('+i+',this.value)">'+gpuOpts+'</select></td>'
       +'<td><input type="number" value="'+d.gpus+'" min="1" max="64" style="width:36px;padding:2px 3px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:var(--text1);font-size:11px;font-family:var(--mono)" onchange="DED_NODES['+i+'].gpus=+this.value;if(DED_NODES['+i+'].active){S.hDedGpus=+this.value;}calcHybrid()"></td>'
       +'<td><input type="number" value="'+d.rateMo+'" style="width:58px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:var(--text1);font-size:10px;font-family:var(--mono)" onchange="DED_NODES['+i+'].rateMo=+this.value;if(DED_NODES['+i+'].active){S.hDedRate=+this.value;}calcHybrid()"></td>'
       +'<td><button class="prov-del" onclick="delDedNode('+i+')">&#215;</button></td>'
@@ -3284,6 +4041,26 @@ function selectDedNode(i){
   DED_NODES.forEach(function(d,j){d.active=j===i;});
   S.hDedRate=DED_NODES[i].rateMo;
   S.hDedGpus=DED_NODES[i].gpus;
+  renderDedNodeTable();
+  calcHybrid();
+}
+function updateDedGpu(i,gpu){
+  DED_NODES[i].gpu=gpu;
+  if(DED_NODES[i].active){S.hDedGpus=DED_NODES[i].gpus;}
+  var name=DED_NODES[i].name;
+  var gpuUp=gpu.toUpperCase();
+  var price=_liveDedPriceMap[name+'|'+gpuUp];
+  if(!price){
+    var keys=Object.keys(_liveDedPriceMap);
+    for(var ki=0;ki<keys.length;ki++){
+      var parts=keys[ki].split('|');
+      if(parts[0]===name){
+        var kGpu=parts[1];
+        if(gpuUp.indexOf(kGpu)>=0||kGpu.indexOf(gpuUp)>=0){price=_liveDedPriceMap[keys[ki]];break;}
+      }
+    }
+  }
+  if(price){DED_NODES[i].rateMo=price;if(DED_NODES[i].active){S.hDedRate=price;}}
   renderDedNodeTable();
   calcHybrid();
 }
@@ -3318,6 +4095,26 @@ function setHybridSplit(val){
   calcHybrid();
 }
 
+var H_GPU_HW=[
+  {name:'H100',hw:25000,label:'H100 80GB'},{name:'H200',hw:32000,label:'H200 141GB'},
+  {name:'B100',hw:35000,label:'B100 192GB'},{name:'B200',hw:45000,label:'B200 180GB'},
+  {name:'B300',hw:60000,label:'B300 288GB'},{name:'A100',hw:15000,label:'A100 80GB'},
+  {name:'L40S',hw:9000,label:'L40S 48GB'},{name:'MI300X',hw:25000,label:'MI300X 192GB'},
+];
+function renderHGpuChips(){
+  var wrap=document.getElementById('h-gpu-chips');
+  if(!wrap)return;
+  wrap.innerHTML='';
+  H_GPU_HW.forEach(function(g){
+    var active=(S.hGpuName||'H100')===g.name;
+    var btn=document.createElement('button');
+    btn.className='chip'+(active?' on':'');
+    btn.style.cssText='font-size:10px;padding:2px 7px;margin:0';
+    btn.textContent=g.label;
+    btn.onclick=function(){S.hHw=g.hw;S.hGpuName=g.name;var sl=document.getElementById('h-hw'),vl=document.getElementById('hv-hw');if(sl)sl.value=g.hw/1000;if(vl)vl.textContent='$'+(g.hw/1000)+'K';renderHGpuChips();calcHybrid();};
+    wrap.appendChild(btn);
+  });
+}
 function calcHybrid(){
   var gpus=S.hGpus||2, running=S.hRun||16;
   var hw=S.hHw||25000, util=S.hUtil||0.3, amort=S.hAmort||5;
@@ -3405,7 +4202,7 @@ function calcHybrid(){
     +'<div class="cc-card'+(bestKey==='cloud'?' recommended':'')+'"><div class="cc-label">Pure cloud</div><div class="cc-price" style="color:var(--red)">'+fmtK(purecloudCost5)+'</div><div class="cc-sub">on-demand · all rented</div>'+(bestKey==='cloud'?'<div class="cc-badge">★ cheapest</div>':'')+'</div>'
     +'<div class="cc-card'+(bestKey==='ded'?' recommended':'')+'"><div class="cc-label">Dedicated node</div><div class="cc-price" style="color:var(--purple)">'+fmtK(dedCost5)+'</div><div class="cc-sub">'+dedNodes+' node'+(dedNodes>1?'s':'')+' · $'+Math.round(dedRateMo/1000)+'K/mo flat</div>'+(bestKey==='ded'?'<div class="cc-badge">★ cheapest</div>':'')+'</div>'
     +'<div class="cc-card'+(bestKey==='hybrid'?' recommended':'')+'"><div class="cc-badge">✦ HYBRID</div><div class="cc-label">Hybrid</div><div class="cc-price" style="color:var(--blue)">'+fmtK(hybridCost5)+'</div><div class="cc-sub">'+hybridSplit+'% own · '+(100-hybridSplit)+'% rent</div>'+(bestKey==='hybrid'?'<div class="cc-badge">★ cheapest</div>':'')+'</div>'
-    +'<div class="cc-card'+(bestKey==='onprem'?' recommended':'')+'"><div class="cc-label">Pure on-prem</div><div class="cc-price" style="color:var(--green)">'+fmtK(pureonpremCost5)+'</div><div class="cc-sub">hardware only · '+amort+'yr amort</div>'+(bestKey==='onprem'?'<div class="cc-badge">★ cheapest</div>':'')+'</div>'
+    +'<div class="cc-card'+(bestKey==='onprem'?' recommended':'')+'"><div class="cc-label">Pure on-prem</div><div class="cc-price" style="color:var(--green)">'+fmtK(pureonpremCost5)+'</div><div class="cc-sub">'+(S.hGpuName||'H100')+' · $'+(hw/1000).toFixed(0)+'K/GPU · '+amort+'yr amort</div>'+(bestKey==='onprem'?'<div class="cc-badge">★ cheapest</div>':'')+'</div>'
     +'</div>'
     +'<div style="font-size:11px;color:var(--text4);margin-bottom:12px">★ = cheapest at your current utilisation ('+Math.round(util*100)+'%). Dedicated node wins at 25–65% utilisation. On-prem wins above 65%.</div>'
     // bars including dedicated node
@@ -3428,80 +4225,207 @@ function calcHybrid(){
 function toggleExpNV(){expNV=!expNV;document.getElementById('exp-nv').classList.toggle('on',expNV);renderExplorer();}
 function toggleExpAMD(){expAMD=!expAMD;document.getElementById('exp-amd').classList.toggle('on',expAMD);renderExplorer();}
 function setAxis(axis,val,btn){
-  if(axis==='x'){axX=val;document.querySelectorAll('.axis-selectors .axis-btn').slice(0,3).forEach(b=>b.classList.remove('on'));}
-  else if(axis==='y'){axY=val;}
-  else{axB=val;}
-  if(btn)btn.classList.add('on');
-  var desc={vram:'VRAM (GB)',price:'Price ($K)',tpp:'Throughput (tok/s)',tpp100:'$/100 TPP'};
-  document.getElementById('axis-desc').textContent='X: '+desc[axX]+' · Y: '+desc[axY]+' · Bubble: '+desc[axB];
+  if(axis==='x') axX=val;
+  else if(axis==='y') axY=val;
+  else axB=val;
+  // Update active state on all axis buttons
+  var allBtns = document.querySelectorAll('.axis-selectors .axis-btn');
+  allBtns.forEach(function(b){ if(b.getAttribute('data-axis')===axis) b.classList.remove('on'); });
+  if(btn) btn.classList.add('on');
+  // Overlay updated by renderExplorer
   renderExplorer();
 }
-function getVal(gpu,key){
-  if(key==='vram')return gpu.vram;
-  if(key==='price')return gpu.price/1000;
-  if(key==='tpp')return gpu.tpp;
-  if(key==='tpp100')return Math.round(gpu.price/gpu.tpp*100);
-  return gpu.vram;
+// Metric labels — used by axis description and tooltips
+var METRIC_LABELS = {
+  vram:         'VRAM (GB)',
+  price:        'On-prem GPU price (est.)',
+  tpp:          'Throughput Index',
+  mem_bw:       'Memory Bandwidth (TB/s)',
+  usdPer100Tpp: 'Cost efficiency ($ / 100 TPP)',
+  usdPerTpp:    '$ / TPP'
+};
+// Short labels for axis selector buttons
+var METRIC_SHORT = {
+  vram:'VRAM', price:'Price', tpp:'Throughput Index',
+  mem_bw:'Mem BW', usdPer100Tpp:'$ / 100 TPP', usdPerTpp:'$ / TPP'
+};
+
+function metricValue(gpu, key){
+  switch(key){
+    case 'vram':         return gpu.vram;
+    case 'price':        return gpu.price;
+    case 'tpp':          return gpu.tpp;
+    case 'mem_bw':       return gpu.mem_bw;
+    case 'usdPer100Tpp': return gpu.usdPer100Tpp;
+    case 'usdPerTpp':    return gpu.usdPerTpp;
+    default:             return gpu.vram;
+  }
 }
+
+// Keep getVal as alias so other parts of app still work
+function getVal(gpu,key){ return metricValue(gpu,key); }
+
+function bubbleRadius(value, metric, allData){
+  var max = Math.max.apply(null, allData.map(function(g){ return metricValue(g, metric); }));
+  if(!max) return 20;
+  return 20 + (value / max) * 40;
+}
+
 function renderExplorer(){
-  var canvas=document.getElementById('explorer-chart');
-  if(!canvas)return;
-  var data=GPU_DATA.filter(g=>(g.vendor==='nvidia'&&expNV)||(g.vendor==='amd'&&expAMD));
-  if(exploreChart){exploreChart.destroy();exploreChart=null;}
-  var maxB=Math.max(...data.map(g=>getVal(g,axB)));
-  var datasets=data.map(function(g){
-    return{
-      label:g.name,
-      data:[{x:getVal(g,axX),y:getVal(g,axY),r:Math.max(12,Math.sqrt(getVal(g,axB)/maxB)*50)}],
-      backgroundColor:g.col+'99',
-      borderColor:g.col+'cc',
-      borderWidth:2,
+  var canvas = document.getElementById('explorer-chart');
+  if(!canvas) return;
+  var data = GPU_DATA.filter(function(g){ return (g.vendor==='nvidia'&&expNV)||(g.vendor==='amd'&&expAMD); });
+  if(exploreChart){ exploreChart.destroy(); exploreChart=null; }
+
+  var datasets = data.map(function(g){
+    var r = bubbleRadius(metricValue(g, axB), axB, data);
+    return {
+      label: g.name,
+      data: [{x: metricValue(g,axX), y: metricValue(g,axY), r: r}],
+      backgroundColor: g.col+'99',
+      borderColor: g.col+'ee',
+      borderWidth: 1.5
     };
   });
-  var labelPlugin={
+
+  var labelPlugin = {
     id:'bubbleLabels',
-    afterDraw:function(chart){
-      var ctx2=chart.ctx;
+    afterDraw: function(chart){
+      var ctx2 = chart.ctx;
       ctx2.save();
-      ctx2.font='bold 10px DM Sans,sans-serif';
-      ctx2.textAlign='center';
-      ctx2.textBaseline='middle';
+      ctx2.font = '600 10px DM Sans,system-ui,sans-serif';
+      ctx2.textAlign = 'center';
+      ctx2.textBaseline = 'middle';
       data.forEach(function(g,i){
-        var meta=chart.getDatasetMeta(i);
-        if(!meta.data[0])return;
-        var x=meta.data[0].x,y=meta.data[0].y;
-        ctx2.strokeStyle='rgba(255,255,255,0.85)';
-        ctx2.lineWidth=3;
-        ctx2.lineJoin='round';
-        ctx2.strokeText(g.name,x,y);
-        ctx2.fillStyle=isDark?'#fff':'#111';
-        ctx2.fillText(g.name,x,y);
+        var meta = chart.getDatasetMeta(i);
+        if(!meta.data[0]) return;
+        var x = meta.data[0].x, y = meta.data[0].y;
+        ctx2.strokeStyle = 'rgba(255,255,255,0.9)';
+        ctx2.lineWidth = 3;
+        ctx2.lineJoin = 'round';
+        ctx2.strokeText(g.name, x, y);
+        ctx2.fillStyle = isDark ? '#fff' : '#111';
+        ctx2.fillText(g.name, x, y);
       });
       ctx2.restore();
     }
   };
-  exploreChart=new Chart(canvas,{
-    type:'bubble',
-    data:{datasets},
-    plugins:[labelPlugin],
-    options:{
-      responsive:true,
-      maintainAspectRatio:true,
-      aspectRatio:2.2,
-      plugins:{
-        legend:{display:false},
-        tooltip:{callbacks:{label:function(ctx){var g=data[ctx.datasetIndex];return g.name+': VRAM '+g.vram+'GB · TPP '+g.tpp.toLocaleString()+' · $'+Math.round(g.price/1000)+'K';}}}
+
+  var fmtVal = function(v, key){
+    if(key==='price') return '$'+Math.round(v/1000)+'K';
+    if(key==='mem_bw') return v.toFixed(1)+' TB/s';
+    if(key==='usdPer100Tpp'||key==='usdPerTpp') return '$'+v.toFixed(1);
+    return v.toLocaleString();
+  };
+
+  exploreChart = new Chart(canvas, {
+    type: 'bubble',
+    data: {datasets: datasets},
+    plugins: [labelPlugin],
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      aspectRatio: 2.2,
+      plugins: {
+        legend: {display: false},
+        tooltip: {
+          callbacks: {
+            title: function(items){ return data[items[0].datasetIndex].name; },
+            label: function(ctx){
+              var g = data[ctx.datasetIndex];
+              var bLabel = METRIC_SHORT[axB]||axB;
+              return [
+                'VRAM: ' + g.vram + ' GB',
+                'On-prem GPU price (est.): $' + g.price.toLocaleString(),
+                'Throughput Index (Planning TPP): ' + g.tpp.toLocaleString(),
+                'Mem Bandwidth: ' + g.mem_bw.toFixed(1) + ' TB/s',
+                '$ / 100 TPP: ' + g.usdPer100Tpp.toFixed(1),
+                'Bubble size = ' + bLabel + (axB==='usdPer100Tpp'?' (smaller = more efficient)':'')
+              ];
+            }
+          }
+        }
       },
-      scales:{
-        x:{grid:{color:isDark?'rgba(255,255,255,.05)':'rgba(0,0,0,.05)'},ticks:{color:isDark?'#666':'#888'}},
-        y:{grid:{color:isDark?'rgba(255,255,255,.05)':'rgba(0,0,0,.05)'},ticks:{color:isDark?'#666':'#888'}},
+      scales: {
+        x: {
+          title: {display:true, text:METRIC_LABELS[axX]||axX, color:isDark?'#888':'#555', font:{size:11,weight:'600'}},
+          grid: {color: isDark?'rgba(255,255,255,.05)':'rgba(0,0,0,.05)'},
+          ticks: {color: isDark?'#666':'#888', font:{size:11},
+            callback: function(v){ return fmtVal(v, axX); }}
+        },
+        y: {
+          title: {display:true, text:METRIC_LABELS[axY]||axY, color:isDark?'#888':'#555', font:{size:11,weight:'600'}},
+          grid: {color: isDark?'rgba(255,255,255,.05)':'rgba(0,0,0,.05)'},
+          ticks: {color: isDark?'#666':'#888', font:{size:11},
+            callback: function(v){ return fmtVal(v, axY); }}
+        }
       },
-      onClick:function(evt,els){if(els.length){var g=data[els[0].datasetIndex];alert(g.name+'\nVRAM: '+g.vram+'GB\nThroughput: '+g.tpp.toLocaleString()+' tok/s\nPrice: $'+g.price.toLocaleString());}}
+      onClick: function(evt,els){
+        if(!els.length) return;
+        var g = data[els[0].datasetIndex];
+        alert(g.name
+          +'\nVRAM: '+g.vram+' GB'
+          +'\nOn-prem GPU price (est.): $'+g.price.toLocaleString()
+          +'\nThroughput Index (Planning TPP): '+g.tpp.toLocaleString()
+          +'\nMem Bandwidth: '+g.mem_bw.toFixed(1)+' TB/s'
+          +'\n$ / 100 TPP: '+g.usdPer100Tpp.toFixed(1));
+      }
     }
   });
-  // Labels drawn via afterDraw plugin (defined above)
+
+  // Update in-chart axis overlay
+  var ml = METRIC_LABELS;
+  var ms = METRIC_SHORT;
+  var olx = document.getElementById('exp-ol-x');
+  var oly = document.getElementById('exp-ol-y');
+  var olb = document.getElementById('exp-ol-b');
+  if(olx) olx.textContent = ml[axX]||axX;
+  if(oly) oly.textContent = ml[axY]||axY;
+  if(olb) olb.textContent = 'Bubble = '+(ms[axB]||axB)+(axB==='usdPer100Tpp'?' (smaller = more efficient)':'');
+
+  // Update insight bar dynamically
+  var insight = document.getElementById('exp-insight');
+  if(insight){
+    var insightMap = {
+      'vram_tpp':   'Top-right = high VRAM and throughput. These GPUs handle larger models and longer contexts.',
+      'vram_price': 'Top-right = high VRAM, high cost. Look for bottom-right for best VRAM per dollar.',
+      'price_tpp':  'Top-right = expensive and high throughput. Look for top-left for best value.',
+      'mem_bw_tpp': 'Throughput Index scales with memory bandwidth — this view shows that relationship directly.',
+      'vram_mem_bw':'Higher memory bandwidth enables faster decoding. Top-right = ideal for LLM inference.',
+    };
+    var ikey = axX+'_'+axY;
+    insight.textContent = insightMap[ikey] || 'Higher Y = better throughput. Smaller bubble = better cost efficiency. Compare across GPU generations.';
+  }
 }
 
+
+function setExpPreset(mode, btn){
+  // Deactivate all preset buttons
+  document.querySelectorAll('[id^="exp-preset-"]').forEach(function(b){ b.classList.remove('on'); });
+  if(btn) btn.classList.add('on');
+  // Clear all axis button active states
+  document.querySelectorAll('.axis-btn').forEach(function(b){ b.classList.remove('on'); });
+  // Apply preset: {x, y, b}
+  var presets = {
+    balanced:   {x:'vram',  y:'tpp',   b:'usdPer100Tpp'},
+    cost:       {x:'price', y:'tpp',   b:'vram'},
+    perf:       {x:'vram',  y:'tpp',   b:'price'}
+  };
+  var p = presets[mode] || presets.balanced;
+  axX = p.x; axY = p.y; axB = p.b;
+  // Re-activate matching axis buttons
+  document.querySelectorAll('.axis-btn').forEach(function(b){
+    var axis = b.getAttribute('data-axis');
+    var val  = b.getAttribute('onclick')||'';
+    var match = val.match(/setAxis\('(.)','([^']+)'/);
+    if(match && match[1]===axis){
+      if((axis==='x'&&match[2]===axX)||(axis==='y'&&match[2]===axY)||(axis==='b'&&match[2]===axB)){
+        b.classList.add('on');
+      }
+    }
+  });
+  renderExplorer();
+}
 
 // ===== NODE TOPOLOGY =====
 function renderTopology(C){
@@ -3551,6 +4475,11 @@ function checkAdminTokenValue(token){
 function loadAdminData(period,token){
   var tok=token||localStorage.getItem(ADMIN_TOKEN_KEY);
   if(!tok)return;
+  if(!API_BASE){
+    document.getElementById('admin-locked-screen').classList.add('hidden');
+    document.getElementById('admin-content').classList.remove('hidden');
+    return;
+  }
   fetch(apiUrl('/api/admin?period='+period),{headers:{'X-Admin-Token':tok}})
     .then(r=>{if(!r.ok)throw new Error('Unauthorized');return r.json();})
     .then(function(d){
@@ -3592,6 +4521,7 @@ function renderAdminData(d){
 // ===== LEAD & INTENT =====
 function submitLead(){
   var emailEl=document.getElementById('lead-email');
+  if(!emailEl) return; // Email box was replaced with Sheets button
   var email=emailEl.value.trim();
   if(!email||!email.includes('@')){
     emailEl.style.border='1px solid var(--red)';
@@ -3601,14 +4531,13 @@ function submitLead(){
   var C=compute();
   T.fire('lead_email',{email_hash:btoa(email).substring(0,16),org:'unknown',model:S.modelLabel,gpus:C.totalGPUs,cost:Math.round(C.cloudCost5yr)});
   var payload={email:email,model:S.modelLabel,users:S.users,ctx:S.ctx,gpus:C.totalGPUs,cost:C.cloudCost5yr};
-  // Try Worker first, fall back to Formspree
-  var workerPromise=fetch(apiUrl('/api/leads'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-  var formspreeId='xpwzgkqb'; // ← Formspree fallback always enabled
+  if(API_BASE){
+    fetch(apiUrl('/api/leads'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).catch(function(){});
+  }
+  var formspreeId='xpwzgkqb';
   if(formspreeId){
     fetch('https://formspree.io/f/'+formspreeId,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(payload)}).catch(function(){});
   }
-  workerPromise.catch(function(){});
-  // Show confirmation immediately
   emailEl.value='';
   emailEl.placeholder='✓ Sent! Check your inbox shortly';
   emailEl.style.border='1px solid var(--green)';
@@ -3636,7 +4565,7 @@ function submitIntentLead(){
   closeIntent();
 }
 function submitLeadEmail(email){
-  fetch(apiUrl('/api/leads'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,source:'intent'})}).catch(()=>{});
+  if(API_BASE) fetch(apiUrl('/api/leads'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,source:'intent'})}).catch(()=>{});
 }
 function closeIntent(){document.getElementById('intent-modal').classList.remove('open');}
 function dismissLI(){
@@ -3727,6 +4656,10 @@ var FLEET_MODELS = [
   {label:'Gemma 2 27B',params:27,layers:46,kvHeads:16,headDim:256,attn:'gqa'},
   {label:'Phi-4 14B',params:14,layers:40,kvHeads:8,headDim:96,attn:'gqa'},
   {label:'Custom',params:8,layers:32,kvHeads:8,headDim:128,attn:'gqa'},
+  {label:'Llama Guard 4 12B',params:12,layers:48,kvHeads:8,headDim:128,attn:'gqa'},
+  {label:'Gemma 3 12B',params:12,layers:48,kvHeads:4,headDim:256,attn:'gqa',kvLayers:8},
+  {label:'Phi-4 reasoning',params:14,layers:40,kvHeads:8,headDim:96,attn:'gqa'},
+  {label:'gpt-oss-20b',params:21,layers:36,kvHeads:8,headDim:64,attn:'gqa',activeExperts:4,totalExperts:128},
 ];
 
 var appMode='single';
@@ -3836,10 +4769,17 @@ function computeTier(tier){
   var uprTheory=Math.max(1,Math.floor(kvPool/Math.max(kvPU,0.001)));
 
   // Throughput ceiling using continuous batching model (vLLM-style)
-  // Realistic tok/s per GPU at batch size >1 (H100 SXM baseline, FP16)
-  var tokensPerSecPerGPU = tier.params <= 10  ? 3000 :
-                           tier.params <= 30  ? 1500 :
-                           tier.params <= 80  ? 800  : 400;
+  // Look up tok/s from GPU_DATA for the selected GPU, scale by model size
+  var gpuEntry = GPU_DATA.find(function(g){
+    return tier.gpuName && (tier.gpuName.toUpperCase().indexOf(g.name.toUpperCase())>=0 || g.name.toUpperCase().indexOf(tier.gpuName.toUpperCase().split(' ')[0])>=0);
+  });
+  var baseTokS = gpuEntry ? gpuEntry.tpp : 18000; // fallback to H100
+  // Scale by model size: larger models use more compute per token
+  // baseTokS is raw GPU throughput; adjust for model serving overhead
+  var tokensPerSecPerGPU = tier.params <= 10  ? Math.round(baseTokS * 0.17) :
+                           tier.params <= 30  ? Math.round(baseTokS * 0.083) :
+                           tier.params <= 80  ? Math.round(baseTokS * 0.044) :
+                                                Math.round(baseTokS * 0.022);
   var avgOutputTokens = tier.avgOutputTok || 200;
   var avgInputTokens  = tier.avgInputTok  || 500;
   // Users/GPU: continuous batching shares decode across requests
@@ -3971,7 +4911,7 @@ function renderFleetLeftPanel(){
     [4,8,16,32,64,128,256].forEach(function(c){html+='<option value="'+c+'"'+(c===t.ctx?' selected':'')+'>'+c+'K</option>';});
     html+='</select></div>';
     html+='<div><div class="panel-label">GPU type</div>';
-    html+='<select class="fleet-tier-select" style="width:100%" onchange="var v=this.value.split('|');SF.tiers['+i+'].gpuName=v[0];SF.tiers['+i+'].gpuVram=+v[1];calcFleet()">';
+    html+='<select class="fleet-tier-select" style="width:100%" onchange="var v=this.value.split(String.fromCharCode(124));SF.tiers['+i+'].gpuName=v[0];SF.tiers['+i+'].gpuVram=+v[1];calcFleet()">';
     [['H100',80],['H200',141],['B100',192],['B200',180],['A100',80],['L40S',48],['MI300X',192]].forEach(function(g){
       var sel=(g[0]===t.gpuName&&+g[1]===t.gpuVram)?' selected':'';
       html+='<option value="'+g[0]+'|'+g[1]+'"'+sel+'>'+g[0]+' '+g[1]+'GB</option>';
@@ -4213,7 +5153,8 @@ function renderFleetBreakdown(results){
           +' data-replicas="'+r.replicas+'"'
           +' data-tp="'+t.tp+'"'
           +' data-params="'+t.params+'"'
-          +' data-out="'+(t.avgOutputTok||200)+'">'
+          +' data-out="'+(t.avgOutputTok||200)+'"'
+          +' data-gpu="'+(t.gpuName||'H100')+'">'
           +r.totalGPUs+' GPU'+(r.totalGPUs!==1?'s':'')+' <span style="font-size:9px;color:var(--text4);text-decoration:underline dotted">why?</span>'
           +'</span></td>')
       +'<td style="font-size:11px;color:var(--text3)">'+t.avgInputTok+' / '+t.avgOutputTok+'</td>'
@@ -4450,6 +5391,7 @@ function showFleetValidateModal(){
 
 
 // ===== LIVE PRICING FROM PRICING WORKER =====
+// moved to top
 function loadLivePrices(){
   if(!PRICING_WORKER) return; // Not configured yet — use hardcoded defaults
   fetch(PRICING_WORKER+'/prices')
@@ -4465,7 +5407,7 @@ function loadLivePrices(){
       // Group by provider, find cheapest per-GPU price for matching GPU type
       var bestByProvider={};
       cloudPrices.forEach(function(p){
-        var perGPU=p.price_usd/(p.gpu_count||1);
+        var perGPU=(p.unit==='per_gpu_hour')?p.price_usd:p.price_usd/(p.gpu_count||1);
         var gpuType=(p.gpu||'').toUpperCase();
         var key=p.provider+'|'+gpuType;
         if(!bestByProvider[key]||perGPU<bestByProvider[key].perGPU){
@@ -4474,29 +5416,68 @@ function loadLivePrices(){
       });
       Object.keys(bestByProvider).forEach(function(key){
         var best=bestByProvider[key];
-        // Find matching PROVIDERS entry (same provider, same GPU family)
-        var match=PROVIDERS.find(function(x){
-          return x.name===best.provider&&x.gpu.toUpperCase().indexOf(best.gpu.toUpperCase())>=0;
+        // Store in global map for dropdown lookups
+        _livePriceMap[key] = best.perGPU;
+        // Find matching PROVIDERS entry — must match BOTH provider name AND GPU family
+        // e.g. "GCP|H100" matches PROVIDERS entry {name:'GCP', gpu:'H100 SXM'}
+        // but NOT {name:'GCP', gpu:'A100 80GB'}
+        var bestGpuUp = best.gpu.toUpperCase();
+        PROVIDERS.forEach(function(x){
+          if(x.name!==best.provider) return;
+          var xGpuUp = x.gpu.toUpperCase();
+          // Match: "H100" in "H100 SXM" or "A100" in "A100 80GB"
+          if(xGpuUp.indexOf(bestGpuUp)>=0 || bestGpuUp.indexOf(xGpuUp.split(' ')[0])>=0){
+            if(Math.abs(best.perGPU-x.rate)/Math.max(x.rate,0.01)>0.01){
+              x.rate=Math.round(best.perGPU*100)/100;
+              updated=true;
+            }
+          }
         });
-        // Fallback: match just by provider name (first entry)
-        if(!match) match=PROVIDERS.find(function(x){return x.name===best.provider;});
-        if(match&&Math.abs(best.perGPU-match.rate)/match.rate>0.01){
-          match.rate=Math.round(best.perGPU*100)/100;
-          updated=true;
-        }
       });
 
-      // ── Update dedicated node pricing (DED_NODES array) ───────────────────
+      // ── Rebuild dedicated node pricing from Worker data (single source of truth) ──
       var dedPrices=prices.filter(function(p){
-        return p.category==='gpu_cloud'&&p.pricing_type==='dedicated';
+        return p.category==='gpu_cloud'&&p.pricing_type==='dedicated'&&p.price_usd>0;
       });
-      dedPrices.forEach(function(p){
-        var match=DED_NODES.find(function(x){return x.name===p.provider;});
-        if(match&&p.price_usd){
-          match.rateMo=Math.round(p.price_usd*30*24*(p.gpu_count||8));
+      if(dedPrices.length>0){
+        // Build _liveDedPriceMap: provider|GPU → $/mo
+        dedPrices.forEach(function(p){
+          var gpuType=(p.gpu||'').toUpperCase();
+          var dedKey=p.provider+'|'+gpuType;
+          var rateMo=Math.round(p.price_usd*30*24*(p.gpu_count||8));
+          _liveDedPriceMap[dedKey]=rateMo;
+        });
+        // Rebuild DED_NODES from live data — one row per provider+GPU combo
+        // Keep whichever row was active if it still exists
+        var activeProvName=DED_NODES.find(function(d){return d.active;})||{name:null,gpu:null};
+        var seen={};
+        var newNodes=[];
+        dedPrices.forEach(function(p){
+          var gpuType=(p.gpu||'').toUpperCase();
+          var gpuDisplay=GPU_OPTIONS.find(function(o){return o.toUpperCase().indexOf(gpuType)>=0||gpuType.indexOf(o.replace(/ SXM| PCIe/gi,'').trim().toUpperCase())>=0;})||p.gpu||gpuType;
+          var key=p.provider+'|'+gpuDisplay;
+          if(seen[key])return; seen[key]=true;
+          var rateMo=Math.round(p.price_usd*30*24*(p.gpu_count||8));
+          newNodes.push({
+            name:p.provider,
+            gpu:gpuDisplay,
+            gpus:p.gpu_count||8,
+            rateMo:rateMo,
+            active:false
+          });
+        });
+        if(newNodes.length>0){
+          // Restore active selection
+          var activeNode=newNodes.find(function(d){return d.name===activeProvName.name&&d.gpu===activeProvName.gpu;});
+          if(!activeNode) activeNode=newNodes[0];
+          activeNode.active=true;
+          S.hDedRate=activeNode.rateMo;
+          S.hDedGpus=activeNode.gpus;
+          DED_NODES.length=0;
+          newNodes.forEach(function(n){DED_NODES.push(n);});
           updated=true;
         }
-      });
+      }
 
       // ── Update API token prices (API_PROVIDERS array) ─────────────────────
       var apiPrices=prices.filter(function(p){return p.category==='api_token';});
@@ -4511,6 +5492,16 @@ function loadLivePrices(){
           }
         }
       });
+
+      // ── Update rates for existing PROVIDERS — never add new rows ──
+      if(Object.keys(_livePriceMap).length > 0){
+        PROVIDERS.forEach(function(p){
+          var gpuUp=p.gpu.toUpperCase();
+          var price=_livePriceMap[p.name+'|'+gpuUp];
+          if(!price){var keys=Object.keys(_livePriceMap);for(var ki=0;ki<keys.length;ki++){var parts=keys[ki].split('|');if(parts[0]===p.name&&(parts[1].indexOf(gpuUp)>=0||gpuUp.indexOf(parts[1])>=0)){price=_livePriceMap[keys[ki]];break;}}}
+          if(price) p.rate=Math.round(price*100)/100;
+        });
+      }
 
       // ── Show freshness badge ───────────────────────────────────────────────
       var latest=prices.map(function(p){return p.fetched_at||'';}).filter(Boolean).sort().pop();
@@ -4540,6 +5531,8 @@ function loadLivePrices(){
         if(document.getElementById('page-hybrid').classList.contains('active')) calcHybrid();
         if(document.getElementById('page-fleet').classList.contains('active')) calcFleet();
         console.log('gpu.calc: live prices loaded from pricing Worker');
+        console.log('gpu.calc: price map keys:', Object.keys(_livePriceMap).join(', '));
+        console.log('gpu.calc: ded price map keys:', Object.keys(_liveDedPriceMap).join(', '));
       }
 
       T.fire('live_prices_loaded',{count:prices.length,updated:updated});
@@ -4582,7 +5575,10 @@ function showGpuTip(el){
   var upr=+el.dataset.upr, theory=+el.dataset.theory;
   var replicas=+el.dataset.replicas, tp=+el.dataset.tp||1;
   var params=+el.dataset.params, out=+el.dataset.out;
-  var tokSec = params<=10?3000:params<=30?1500:params<=80?800:400;
+  var gpuN=el.dataset.gpu||'H100';
+  var gpuE=GPU_DATA.find(function(g){return gpuN.toUpperCase().indexOf(g.name.toUpperCase())>=0||g.name.toUpperCase().indexOf(gpuN.toUpperCase().split(' ')[0])>=0;});
+  var bTok=gpuE?gpuE.tpp:18000;
+  var tokSec=params<=10?Math.round(bTok*0.17):params<=30?Math.round(bTok*0.083):params<=80?Math.round(bTok*0.044):Math.round(bTok*0.022);
   var html='<div class="tip-row"><span>Concurrent users</span><span class="tip-val">'+conc+'</span></div>'
     +'<div class="tip-row"><span>+ 20% buffer</span><span class="tip-val">'+buf+'</span></div>'
     +'<div class="tip-row"><span>KV cache capacity</span><span class="tip-val">'+theory+' users/GPU</span></div>'
@@ -4602,6 +5598,994 @@ function hideGpuTip(){
   var tip=document.getElementById('gpu-tooltip');
   if(tip) tip.style.display='none';
 }
+
+// ===== CALIBRATED ESTIMATE PAGE =====
+
+var CAL_API = 'https://aiconfig-api.onrender.com/estimate';
+
+var CAL_STATE = {
+  modelPath: 'meta-llama/Meta-Llama-3.1-8B-Instruct',
+  modelLabel: 'Llama 3.1 8B',
+  modelArch: null,  // full arch fields — set on model select/lookup
+  lastResult: null,
+  savedRuns: [],
+  payloadEdited: false
+};
+
+var calPayloadEdited = false;
+
+// Proxy/fallback map
+var MODEL_FALLBACKS = {
+  'google/gemma-3-12b-it':           { proxy:'Qwen/Qwen2.5-14B',                        mode:'proxy',     reason:'Gemma unsupported in estimator' },
+  'microsoft/Phi-4-reasoning':        { proxy:'Qwen/Qwen2-7B',                           mode:'proxy',     reason:'Phi unsupported in estimator' },
+  'microsoft/phi-4-reasoning-plus':   { proxy:'Qwen/Qwen2-7B',                           mode:'proxy',     reason:'Phi unsupported in estimator' },
+  'meta-llama/Llama-Guard-4-12B':     { proxy:'meta-llama/Meta-Llama-3.1-8B-Instruct',  mode:'proxy',     reason:'Guard parser gap in estimator' }
+};
+
+// GPU display label map
+var CAL_GPU_LABELS = {
+  h100_sxm:'H100 SXM', h200_sxm:'H200 SXM', a100_sxm:'A100 80GB',
+  l40s:'L40S', b200_sxm:'B200 SXM', mi300x:'MI300X'
+};
+// VRAM (GB) for each system key — reuses GPU_DATA where possible
+var CAL_GPU_VRAM = {
+  h100_sxm:80, h200_sxm:141, a100_sxm:80, l40s:48, b200_sxm:180, mi300x:192
+};
+
+// Compute GPU sizing from calibrated result
+function calcCalGPUs(result){
+  if(!result) return null;
+  var tpsPerGpu = result.tokens_per_sec_per_gpu;
+  var latMs     = result.latency_ms || result.ttft_ms;
+  var isl       = result.isl  || 1024;
+  var osl       = result.osl  || 256;
+  var batch     = result.batch || 16;
+  var gpuLabel  = CAL_GPU_LABELS[result.gpu] || result.gpu;
+  var ctxK      = parseInt((document.getElementById('cal-ctx')||{}).value)||4;
+
+  // A. Tokens per request
+  var tokPerReq = isl + osl;
+
+  // B. Request rate
+  var latSec = latMs ? latMs / 1000 : null;
+  var rps    = latSec ? (batch / latSec) : batch;
+
+  // C. Token demand
+  var demandTps     = rps * tokPerReq;
+  var gpusThroughput = tpsPerGpu ? Math.ceil(demandTps / tpsPerGpu) : null;
+
+  // D. Memory/KV fit — call compute() directly, exactly as Capacity does.
+  //    Set S to calibrated inputs, call compute(), restore S. One formula, two callers.
+  // Arch priority: current CAL_STATE (chip/lookup) > result.modelArch (stored at estimate time)
+  // result.modelArch is only null for results cached before v5.4.49 or if lookup was skipped.
+  var arch = CAL_STATE.modelArch || result.modelArch;
+  if(!arch && typeof MODELS !== 'undefined'){
+    var mMatch = MODELS.find(function(x){
+      return x.hfId===CAL_STATE.modelPath || x.name===CAL_STATE.modelLabel
+          || x.hfId===result.modelPath    || x.name===result.modelLabel;
+    });
+    if(mMatch) arch = {
+      params:mMatch.params, prec:'fp16', kvPrec:'fp16',
+      numLayers:mMatch.layers, numKvHeads:mMatch.kvHeads,
+      numHeads:mMatch.numHeads||mMatch.kvHeads*4||32,
+      headDim:mMatch.headDim, attn:mMatch.attn,
+      kvLayers:mMatch.kvLayers||null, kvArchType:mMatch.kvArchType||null,
+      kvGlobalLayers:mMatch.kvGlobalLayers!=null?mMatch.kvGlobalLayers:null,
+      kvSlidingLayers:mMatch.kvSlidingLayers!=null?mMatch.kvSlidingLayers:null,
+      slidingWindow:mMatch.slidingWindow||null,
+      globalKvHeads:mMatch.globalKvHeads||null, globalHeadDim:mMatch.globalHeadDim||null,
+      kvLoraRank:mMatch.kvLoraRank||null, qkRopeHeadDim:mMatch.qkRopeHeadDim||null,
+      activeExperts:mMatch.activeExperts||null, totalExperts:mMatch.totalExperts||null
+    };
+    if(arch) CAL_STATE.modelArch = arch;
+  }
+
+  // Save all S fields that compute() reads
+  var _s = {
+    params:S.params, prec:S.prec, kvPrec:S.kvPrec,
+    numLayers:S.numLayers, numKvHeads:S.numKvHeads, numHeads:S.numHeads,
+    headDim:S.headDim, attn:S.attn,
+    kvLayers:S.kvLayers, kvArchType:S.kvArchType,
+    kvGlobalLayers:S.kvGlobalLayers, kvSlidingLayers:S.kvSlidingLayers,
+    slidingWindow:S.slidingWindow, globalKvHeads:S.globalKvHeads,
+    globalHeadDim:S.globalHeadDim, kvLoraRank:S.kvLoraRank, qkRopeHeadDim:S.qkRopeHeadDim,
+    activeExperts:S.activeExperts, totalExperts:S.totalExperts,
+    gpuVram:S.gpuVram, gpuName:S.gpuName,
+    users:S.users, ctx:S.ctx, tp:S.tp, fw:S.fw,
+    hitrate:S.hitrate, mode:S.mode
+  };
+
+  // Set S to calibrated inputs
+  if(arch){
+    S.params=arch.params; S.prec=arch.prec||'fp16'; S.kvPrec=arch.kvPrec||arch.prec||'fp16';
+    S.numLayers=arch.numLayers; S.numKvHeads=arch.numKvHeads; S.numHeads=arch.numHeads;
+    S.headDim=arch.headDim; S.attn=arch.attn;
+    S.kvLayers=arch.kvLayers; S.kvArchType=arch.kvArchType;
+    S.kvGlobalLayers=arch.kvGlobalLayers; S.kvSlidingLayers=arch.kvSlidingLayers;
+    S.slidingWindow=arch.slidingWindow; S.globalKvHeads=arch.globalKvHeads;
+    S.globalHeadDim=arch.globalHeadDim; S.kvLoraRank=arch.kvLoraRank;
+    S.qkRopeHeadDim=arch.qkRopeHeadDim;
+    S.activeExperts=arch.activeExperts; S.totalExperts=arch.totalExperts;
+  }
+  S.gpuVram = CAL_GPU_VRAM[result.gpu] || 80;
+  S.gpuName = CAL_GPU_LABELS[result.gpu] || result.gpu;
+  S.users   = batch;
+  S.ctx     = ctxK;
+  S.tp      = result.tp || 1;
+  S.fw      = result.backend === 'vllm' ? 'vllm' : 'trtllm';
+  S.hitrate = _s.hitrate; // keep user's prefix cache setting
+  S.mode    = 'std';      // not llm-d
+
+  var C = compute(); // ← exact same function Capacity calls
+
+  // Restore S
+  Object.assign(S, _s);
+
+  var gpusMemory = C.totalGPUs;
+  var gpusFinal  = gpusThroughput ? Math.max(gpusThroughput, gpusMemory) : gpusMemory;
+
+  return {
+    tokPerReq, rps, demandTps, tpsPerGpu,
+    gpusThroughput, gpusMemory, gpusFinal,
+    wGB:      C.wGB,
+    kvPU:     C.kvPU,
+    avail:    C.avail,
+    upr:      C.upr,
+    replicas: C.replicas,
+    autoTp:   C.autoTp,
+    vram:     CAL_GPU_VRAM[result.gpu] || 80,
+    gpuLabel, latSec, batch, isl, osl, ctxK
+  };
+}
+
+// Loading tips
+var CAL_TIPS = [
+  'GPU memory bandwidth is often the bottleneck, not compute.',
+  'KV cache size grows linearly with context length and batch size.',
+  'Tensor parallelism reduces per-GPU memory but adds communication overhead.',
+  'TRT-LLM typically outperforms vLLM on fixed-batch throughput benchmarks.',
+  'For long contexts, GQA models use significantly less KV cache memory.',
+  'Pipeline parallelism is most effective for large models across multiple nodes.',
+  'Prefill (TTFT) is compute-bound; decode (TPOT) is memory-bandwidth-bound.',
+  'INT8/FP8 quantization can double throughput with minimal accuracy loss on most tasks.'
+];
+
+// Cache: key = JSON payload string → result
+var calCache = {};
+(function loadCalCache(){
+  try{
+    var c=localStorage.getItem('cal_cache');
+    if(c){
+      var raw=JSON.parse(c)||{};
+      // Drop cached results that predate modelArch storage (v5.4.49+)
+      Object.keys(raw).forEach(function(k){
+        if(raw[k] && !raw[k].modelArch) delete raw[k];
+      });
+      calCache=raw;
+    }
+  }catch(e){}
+})();
+(function loadCalSaved(){
+  try{var s=localStorage.getItem('cal_saved');if(s){CAL_STATE.savedRuns=JSON.parse(s)||{};}}catch(e){}
+  // migrate: savedRuns may be array or object
+  if(!Array.isArray(CAL_STATE.savedRuns)) CAL_STATE.savedRuns=[];
+})();
+
+function initCalibratedPage(){
+  // Ensure modelArch is populated for the default/current model
+  if(!CAL_STATE.modelArch && typeof MODELS !== 'undefined'){
+    var m = MODELS.find(function(x){
+      return x.hfId === CAL_STATE.modelPath || x.name === CAL_STATE.modelLabel;
+    });
+    if(m) CAL_STATE.modelArch = {
+      params: m.params, prec:'fp16',
+      numLayers:m.layers, numKvHeads:m.kvHeads,
+      numHeads:m.numHeads||m.kvHeads*4||32, headDim:m.headDim, attn:m.attn,
+      kvLayers:m.kvLayers||null, kvArchType:m.kvArchType||null,
+      kvGlobalLayers:m.kvGlobalLayers!=null?m.kvGlobalLayers:null,
+      kvSlidingLayers:m.kvSlidingLayers!=null?m.kvSlidingLayers:null,
+      slidingWindow:m.slidingWindow||null,
+      globalKvHeads:m.globalKvHeads||null, globalHeadDim:m.globalHeadDim||null,
+      kvLoraRank:m.kvLoraRank||null, qkRopeHeadDim:m.qkRopeHeadDim||null,
+      activeExperts:m.activeExperts||null, totalExperts:m.totalExperts||null
+    };
+  }
+  updateCalPayload();
+  renderCalSavedComparison();
+}
+
+function selectCalModel(hfId, label, btn){
+  CAL_STATE.modelPath = hfId;
+  CAL_STATE.modelLabel = label;
+  // Store arch from MODELS array so compute() uses correct weights/KV
+  var m = (typeof MODELS!=='undefined') && MODELS.find(function(x){ return x.hfId===hfId || x.name===label; });
+  CAL_STATE.modelArch = m ? {
+    params: m.params, prec: 'fp16',
+    numLayers: m.layers, numKvHeads: m.kvHeads,
+    numHeads: m.numHeads||m.kvHeads*4||32,
+    headDim: m.headDim, attn: m.attn,
+    kvLayers: m.kvLayers||null, kvArchType: m.kvArchType||null,
+    kvGlobalLayers: m.kvGlobalLayers!=null?m.kvGlobalLayers:null,
+    kvSlidingLayers: m.kvSlidingLayers!=null?m.kvSlidingLayers:null,
+    slidingWindow: m.slidingWindow||null,
+    globalKvHeads: m.globalKvHeads||null, globalHeadDim: m.globalHeadDim||null,
+    kvLoraRank: m.kvLoraRank||null, qkRopeHeadDim: m.qkRopeHeadDim||null,
+    activeExperts: m.activeExperts||null, totalExperts: m.totalExperts||null
+  } : null;
+  document.querySelectorAll('#cal-model-chips .chip').forEach(function(b){b.classList.remove('on');});
+  if(btn) btn.classList.add('on');
+  var disp = document.getElementById('cal-model-display');
+  if(disp) disp.textContent = label;
+  var inp = document.getElementById('cal-hf-input');
+  if(inp) inp.value = '';
+  var ctxEl = document.getElementById('cal-ctx');
+  if(ctxEl && S.ctx) ctxEl.value = S.ctx;
+  // Clear last result so recomputeSizing uses fresh arch, not stale cached result
+  if(CAL_STATE.lastResult && CAL_STATE.lastResult.modelPath !== hfId){
+    CAL_STATE.lastResult = null;
+    CAL_STATE.lastSizing = null;
+  }
+  calPayloadEdited = false;
+  updateCalPayload();
+}
+
+function calHFLookup(){
+  var id = (document.getElementById('cal-hf-input').value||'').trim();
+  if(!id) return;
+  var st = document.getElementById('cal-hf-status');
+  st.textContent = 'Looking up...';
+  st.style.color = 'var(--text3)';
+  fetchHFModel(id, 'cal-hf-status', function(m){
+    CAL_STATE.modelPath = id;
+    CAL_STATE.modelLabel = m.name;
+    CAL_STATE.modelArch = {
+      params: m.params, prec: 'fp16', kvPrec: 'fp16',
+      numLayers: m.layers, numKvHeads: m.kvHeads,
+      numHeads: m.numHeads||m.kvHeads*4||32,
+      headDim: m.headDim, attn: m.attn,
+      kvLayers: m.kvLayers||null, kvArchType: m.kvArchType||null,
+      kvGlobalLayers: m.kvGlobalLayers!=null?m.kvGlobalLayers:null,
+      kvSlidingLayers: m.kvSlidingLayers!=null?m.kvSlidingLayers:null,
+      slidingWindow: m.slidingWindow||null,
+      globalKvHeads: m.globalKvHeads||null, globalHeadDim: m.globalHeadDim||null,
+      kvLoraRank: m.kvLoraRank||null, qkRopeHeadDim: m.qkRopeHeadDim||null,
+      activeExperts: m.activeExperts||null, totalExperts: m.totalExperts||null
+    };
+    var disp = document.getElementById('cal-model-display');
+    if(disp) disp.textContent = m.name + ' (' + m.params + 'B, ' + m.layers + 'L, ' + (m.attn==='gqa'?'GQA':'MHA') + ')';
+    document.querySelectorAll('#cal-model-chips .chip').forEach(function(b){b.classList.remove('on');});
+    calPayloadEdited = false;
+    updateCalPayload();
+  });
+}
+
+function buildCalPayload(forceModel){
+  var modelPath = forceModel || CAL_STATE.modelPath;
+  var isl  = parseInt(document.getElementById('cal-isl').value)||1024;
+  var osl  = parseInt(document.getElementById('cal-osl').value)||256;
+  var batch= parseInt(document.getElementById('cal-batch').value)||16;
+  var gpu  = document.getElementById('cal-gpu').value||'h100_sxm';
+  var back = document.getElementById('cal-backend').value||'trtllm';
+  var tp   = parseInt(document.getElementById('cal-tp').value)||1;
+  var pp   = parseInt(document.getElementById('cal-pp').value)||1;
+  return {
+    model_path: modelPath,
+    system: gpu,
+    isl: isl,
+    osl: osl,
+    batch_size: batch,
+    backend: back,
+    database_mode: 'HYBRID',
+    tp_size: tp,
+    pp_size: pp
+  };
+}
+
+function updateCalPayload(){
+  if(calPayloadEdited) return; // user edited manually — don't overwrite
+  var payload = buildCalPayload();
+  var ed = document.getElementById('cal-payload-editor');
+  if(ed) ed.value = JSON.stringify(payload, null, 2);
+}
+
+function getCalPayload(){
+  // If user edited the payload editor, use that; otherwise build fresh
+  var ed = document.getElementById('cal-payload-editor');
+  if(calPayloadEdited && ed && ed.value){
+    try{ return JSON.parse(ed.value); }
+    catch(e){ alert('Invalid JSON in payload editor: ' + e.message); return null; }
+  }
+  return buildCalPayload();
+}
+
+function showCalLoading(show){
+  var modal = document.getElementById('cal-loading-modal');
+  if(!modal) return;
+  modal.style.display = show ? 'flex' : 'none';
+  if(show){
+    var tip = document.getElementById('cal-loading-tip');
+    var idx = Math.floor(Math.random()*CAL_TIPS.length);
+    if(tip) tip.textContent = CAL_TIPS[idx];
+    // Rotate tips every 3s
+    CAL_STATE._tipTimer = setInterval(function(){
+      idx = (idx+1) % CAL_TIPS.length;
+      if(tip) tip.textContent = CAL_TIPS[idx];
+    }, 3000);
+  } else {
+    if(CAL_STATE._tipTimer) clearInterval(CAL_STATE._tipTimer);
+  }
+}
+
+function runCalibratedEstimate(forceRefresh){
+  var payload = getCalPayload();
+  if(!payload) return;
+
+  var cacheKey = JSON.stringify(payload);
+
+  // Check cache unless forced refresh
+  if(!forceRefresh && calCache[cacheKey]){
+    showCalResult(calCache[cacheKey], true);
+    return;
+  }
+
+  // Resolve model: exact → proxy → heuristic
+  var modelPath = payload.model_path;
+  var fallback  = MODEL_FALLBACKS[modelPath];
+  var mode      = 'exact';
+  var proxyReason = null;
+
+  if(fallback){
+    mode        = fallback.mode;
+    proxyReason = fallback.reason;
+    payload     = Object.assign({}, payload, {model_path: fallback.proxy});
+  }
+
+  showCalLoading(true);
+
+  fetch(CAL_API, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  })
+  .then(function(r){
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  })
+  .then(function(data){
+    showCalLoading(false);
+    var result = parseCalResult(data, mode, proxyReason, payload, cacheKey);
+    calCache[cacheKey] = result;
+    try{ localStorage.setItem('cal_cache', JSON.stringify(calCache)); }catch(e){}
+    showCalResult(result, false);
+  })
+  .catch(function(err){
+    showCalLoading(false);
+    // Fall through to heuristic
+    var result = buildHeuristicResult(payload, mode, proxyReason, cacheKey, err.message);
+    showCalResult(result, false);
+  });
+}
+
+function parseCalResult(data, mode, proxyReason, payload, cacheKey){
+  // Normalize API response — field names may vary
+  // Flatten nested response — API may nest under results/result/data
+  var d = {};
+  var src = data.results || data.result || data.data || data || {};
+  // Some APIs return array of results
+  if(Array.isArray(src)) src = src[0] || {};
+  // Copy all fields from src and any nested objects one level deep
+  Object.keys(src).forEach(function(k){
+    if(src[k] !== null && typeof src[k] === 'object' && !Array.isArray(src[k])){
+      Object.keys(src[k]).forEach(function(k2){ d[k2] = src[k][k2]; });
+    } else { d[k] = src[k]; }
+  });
+
+  // Primary field names the API is documented to return
+  var tps     = d.tokens_per_sec      || d.throughput_token_per_s || d.tokens_per_second  || d.throughput            || d.output_token_throughput || null;
+  var tpsGpu  = d.tokens_per_sec_per_gpu || (tps != null && payload.tp_size ? tps / payload.tp_size : null);
+  var ttft    = d.ttft_ms             || d.ttft                   || d.time_to_first_token_ms || d.time_to_first_token || null;
+  var tpot    = d.tpot_ms             || d.tpot                   || d.time_per_output_token_ms || d.time_per_output_token || d.inter_token_latency_ms || null;
+  var lat     = d.request_latency_ms  || d.latency_ms             || d.latency             || d.end_to_end_latency_ms  || d.e2e_latency_ms          || null;
+  var mem     = d.gpu_memory_gb       || d.memory_gb              || d.gpu_memory          || d.vram_used_gb           || null;
+
+  // Derive latency if missing: TTFT + TPOT * osl
+  if(lat == null && ttft != null && tpot != null){
+    lat = ttft + tpot * (payload.osl || 256);
+  }
+
+  var parsed = {
+    tokens_per_sec:         tps,
+    tokens_per_sec_per_gpu: tpsGpu,
+    ttft_ms:                ttft,
+    tpot_ms:                tpot,
+    request_latency_ms:     lat,
+    gpu_memory_gb:          mem
+  };
+
+  // Update debug panels
+  var rawEl = document.getElementById('cal-raw-response');
+  var parsedEl = document.getElementById('cal-parsed-fields');
+  if(rawEl){
+    try{ rawEl.textContent = JSON.stringify(data, null, 2); }
+    catch(e){ rawEl.textContent = String(data); }
+  }
+  if(parsedEl){
+    parsedEl.textContent = JSON.stringify(parsed, null, 2);
+  }
+
+  return {
+    mode: mode,
+    modelPath: CAL_STATE.modelPath,
+    modelLabel: CAL_STATE.modelLabel,
+    modelArch: CAL_STATE.modelArch || null,  // carry arch with result for sizing
+    proxyModel: payload.model_path,
+    proxyReason: proxyReason,
+    gpu: payload.system,
+    backend: payload.backend,
+    isl: payload.isl,
+    osl: payload.osl,
+    batch: payload.batch_size,
+    tp: payload.tp_size,
+    pp: payload.pp_size,
+    tokens_per_sec:         tps,
+    tokens_per_sec_per_gpu: tpsGpu,
+    ttft_ms:                ttft,
+    tpot_ms:                tpot,
+    latency_ms:             lat,
+    gpu_memory_gb:          mem,
+    raw: data,
+    cacheKey: cacheKey,
+    ts: Date.now(),
+    isHeuristic: false
+  };
+}
+
+function buildHeuristicResult(payload, mode, proxyReason, cacheKey, errMsg){
+  // Simple heuristic: rough tok/s based on GPU + model size from S state
+  var heuristicTps = null;
+  var gpuBW = {h100_sxm:3350,h200_sxm:4800,a100_sxm:2000,l40s:864,b200_sxm:8000,mi300x:5300};
+  var bw = gpuBW[payload.system] || 2000; // GB/s
+  // Rough: tok/s ≈ bandwidth / (2 * params_B * bytes_per_param)
+  var params = S.params || 8;
+  var bytesPerParam = (S.prec === 'fp8' || S.kvPrec === 'fp8') ? 1 : 2;
+  heuristicTps = Math.round(bw * 1e9 / (params * 1e9 * bytesPerParam) / payload.tp_size);
+
+  return {
+    mode: 'heuristic',
+    modelPath: CAL_STATE.modelPath,
+    modelLabel: CAL_STATE.modelLabel,
+    proxyModel: payload.model_path,
+    proxyReason: proxyReason || ('API unavailable: ' + errMsg),
+    gpu: payload.system,
+    backend: payload.backend,
+    isl: payload.isl,
+    osl: payload.osl,
+    batch: payload.batch_size,
+    tp: payload.tp_size,
+    pp: payload.pp_size,
+    tokens_per_sec: heuristicTps,
+    latency_ms: null,
+    ttft_ms: null,
+    tpot_ms: null,
+    gpu_memory_gb: null,
+    raw: null,
+    cacheKey: cacheKey,
+    ts: Date.now(),
+    isHeuristic: true
+  };
+}
+
+function showCalResult(result, fromCache){
+  CAL_STATE.lastResult = result;
+
+  document.getElementById('cal-empty').style.display = 'none';
+  document.getElementById('cal-results').style.display = 'block';
+
+  // Mode badge
+  var badge = document.getElementById('cal-mode-badge');
+  var modeColors = {exact:'var(--green)',proxy:'#dc2626',heuristic:'var(--text3)'};
+  var modeLabels = {exact:'✓ Exact',proxy:'⚠ Proxy',heuristic:'~ Heuristic'};
+  badge.textContent = modeLabels[result.mode] || result.mode;
+  badge.style.color = modeColors[result.mode] || 'var(--text3)';
+  badge.style.borderColor = result.mode==='proxy' ? '#dc2626' : 'var(--border)';
+
+  // Always show current chip selection label, not stale result label
+  document.getElementById('cal-result-model').textContent = CAL_STATE.modelLabel || result.modelLabel;
+  document.getElementById('cal-result-gpu-badge').textContent =
+    (CAL_GPU_LABELS[result.gpu]||result.gpu) + ' · ' + (result.backend||'').toUpperCase() + ' · TP=' + result.tp;
+
+  // Cache badge + refresh in action bar
+  var cb = document.getElementById('cal-cache-badge');
+  var rb = document.getElementById('cal-refresh-btn');
+  var ts = document.getElementById('cal-cache-ts');
+  if(cb){
+    if(fromCache){
+      cb.textContent = '📦 Cached'; cb.title = 'Loaded from cache. Click Refresh for a fresh call.';
+      cb.style.display='inline'; if(rb) rb.style.display='inline';
+    } else {
+      cb.textContent = '✨ Fresh'; cb.title = 'Live result from estimator API.';
+      cb.style.display='inline'; if(rb) rb.style.display='none';
+    }
+  }
+  if(ts){ ts.textContent = new Date(result.ts).toLocaleTimeString(); }
+
+  // Show action buttons (both top bar and near-results)
+  ['cal-save-btn','cal-save-btn2'].forEach(function(id){
+    var b=document.getElementById(id); if(b) b.style.display='inline';
+  });
+  ['cal-export-btn','cal-export-btn2'].forEach(function(id){
+    var b=document.getElementById(id); if(b) b.style.display='inline';
+  });
+
+  // Proxy / heuristic note
+  var note = document.getElementById('cal-proxy-note');
+  if(result.mode !== 'exact'){
+    note.style.display = 'block';
+    if(result.mode === 'proxy'){
+      note.style.borderColor = '#dc2626';
+      note.style.borderWidth = '1px';
+      // Find proxy label
+      var fb = MODEL_FALLBACKS[result.modelPath] || {};
+      note.innerHTML =
+        '<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">'
+        +'<span style="background:#dc2626;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px">PROXY</span>'
+        +'<strong style="font-size:12px">Proxy model used for this estimate</strong></div>'
+        +'<table style="font-size:11px;border-collapse:collapse;width:100%">'
+        +'<tr><td style="color:var(--text4);padding:3px 10px 3px 0;white-space:nowrap;font-weight:600">Using proxy</td>'
+        +'<td style="font-family:var(--mono);color:var(--text1)">'+result.proxyModel+'</td></tr>'
+        +'<tr><td style="color:var(--text4);padding:3px 10px 3px 0;font-weight:600">Reason</td>'
+        +'<td>'+result.proxyReason+'</td></tr>'
+        +'<tr><td style="color:var(--text4);padding:3px 10px 3px 0;font-weight:600">Why this proxy</td>'
+        +'<td>'+(fb.reason||'Closest supported model for throughput estimation')+'</td></tr>'
+        +'<tr><td style="color:var(--text4);padding:3px 10px 3px 0;font-weight:600">Impact</td>'
+        +'<td>Throughput and latency are approximate. Validate with workload-specific benchmarking before procurement.</td></tr>'
+        +'</table>';
+    } else {
+      note.style.borderColor = 'var(--border)';
+      note.innerHTML = '<strong>Heuristic estimate</strong> — Estimator API unavailable. '
+        +'Showing bandwidth-based projection only.<br>'
+        +'<span style="font-size:11px;color:var(--text4)">'+(result.proxyReason||'')+'</span>';
+    }
+  } else {
+    note.style.display = 'none';
+  }
+
+  // ── Compute GPU sizing ──
+  var sizing = calcCalGPUs(result);
+  CAL_STATE.lastSizing = sizing;
+
+  var fmt = function(v,unit,dp){ return v!=null ? (dp!=null?parseFloat(v).toFixed(dp):Math.round(v))+unit : '—'; };
+  var fmtN = function(v){ return v!=null ? Math.round(v).toLocaleString() : '—'; };
+
+  // ── Outcome tiles — use exact Capacity .oc / .oc-val / .oc-label classes ──
+  var grid = document.getElementById('cal-metrics-grid');
+  if(grid){
+    var oc = function(label, val, sub, badge, cls){
+      return '<div class="oc'+(cls?' '+cls:'')+'">'
+        +'<div class="oc-label">'+label+'</div>'
+        +'<div class="oc-val">'+val+'</div>'
+        +'<div class="oc-sub">'+sub+'</div>'
+        +(badge||'')
+        +'</div>';
+    };
+    var supply  = result.tokens_per_sec_per_gpu!=null ? fmt(result.tokens_per_sec_per_gpu,' tok/s',0) : '—';
+    var tokReq  = sizing ? (sizing.isl+sizing.osl).toLocaleString() : '—';
+    var rpsStr  = sizing ? fmt(sizing.rps,'/s',1) : '—';
+    var demStr  = sizing ? fmtN(sizing.demandTps)+' tok/s' : '—';
+    var tGPUs   = sizing && sizing.gpusThroughput!=null ? String(sizing.gpusThroughput) : '—';
+    var mGPUs   = sizing ? String(sizing.gpusMemory) : '—';
+    var fGPUs   = sizing ? String(sizing.gpusFinal)  : '—';
+
+    // GPU hero — same style as Capacity winner card
+    var heroBadge = sizing
+      ? '<span class="oc-badge good">'+sizing.autoTp+'× tensor parallel</span>'
+      : '';
+    var heroSub = sizing
+      ? sizing.gpuLabel+' · '+sizing.replicas+' replica'+(sizing.replicas>1?'s':'')+' × '+sizing.autoTp+' GPU'
+      : 'run estimate first';
+
+    grid.innerHTML =
+        oc('Required GPUs', fGPUs, heroSub, heroBadge, 'winner')
+      + oc('Tokens / request', tokReq,  'input + output per request')
+      + oc('Req / sec',        rpsStr,  'batch ÷ request latency')
+      + oc('Throughput demand',demStr,  'req/s × tokens/request')
+      + oc('Supply / GPU',     supply,  'tok/s per GPU · from estimator')
+      + oc('Throughput GPUs',  tGPUs,   'ceil(demand ÷ supply/GPU)')
+      + oc('Memory / KV GPUs', mGPUs,   sizing
+          ? sizing.replicas+' replica×'+sizing.autoTp+'GPU · '+fmtN(sizing.upr)+' users/replica'
+          : 'weights + KV cache');
+  }
+
+  // ── Calculation breakdown ──
+  var breakdownDetails = document.getElementById('cal-breakdown-details');
+  var breakdown = document.getElementById('cal-breakdown');
+  if(breakdown && sizing){
+    if(breakdownDetails) breakdownDetails.style.display = 'block';
+    // Populate editable inputs with current values
+    var szIsl = document.getElementById('sz-isl');
+    var szOsl = document.getElementById('sz-osl');
+    var szBatch = document.getElementById('sz-batch');
+    var szCtx = document.getElementById('sz-ctx');
+    if(szIsl && !szIsl._edited) szIsl.value = sizing.isl;
+    if(szOsl && !szOsl._edited) szOsl.value = sizing.osl;
+    if(szBatch && !szBatch._edited) szBatch.value = sizing.batch;
+    if(szCtx && !szCtx._edited) szCtx.value = sizing.ctxK;
+    var fmt2 = function(v,dp){ return v!=null?(dp!=null?parseFloat(v).toFixed(dp):Math.round(v).toLocaleString()):'—'; };
+    var line = function(label, val){
+      return '<div style="display:flex;align-items:baseline;gap:6px;padding:3px 0;border-bottom:1px solid var(--border)">'
+        +'<span style="font-size:11px;color:var(--text3);min-width:160px;flex-shrink:0">'+label+'</span>'
+        +'<span style="font-size:12px;font-family:var(--mono);color:var(--text2);flex:1">'+val+'</span>'
+        +'</div>';
+    };
+    breakdown.innerHTML =
+      '<div style="font-size:10px;font-weight:600;color:var(--text4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Sizing calculation</div>'
+      + line('Tokens / request', sizing.isl+' + '+sizing.osl+' = <b>'+fmt2(sizing.tokPerReq)+'</b> tokens')
+      + line('Req / sec', fmt2(sizing.batch)+' batch ÷ '+(sizing.latSec?fmt2(sizing.latSec,3)+'s lat':'est.')+' = <b>'+fmt2(sizing.rps,1)+'/s</b>')
+      + line('Throughput demand', fmt2(sizing.rps,1)+' × '+fmt2(sizing.tokPerReq)+' = <b>'+fmt2(sizing.demandTps)+' tok/s</b>')
+      +(sizing.tpsPerGpu ? line('Supply / GPU', 'estimator → <b>'+fmt2(sizing.tpsPerGpu,0)+' tok/s</b>') : '')
+      +(sizing.gpusThroughput!=null ? line('Throughput GPUs', 'ceil('+fmt2(sizing.demandTps)+' ÷ '+fmt2(sizing.tpsPerGpu,0)+') = <b>'+sizing.gpusThroughput+'</b>') : '')
+      + line('Auto TP', sizing.autoTp+'× (min to fit '+fmt2(sizing.wGB,1)+'GB weights on '+sizing.vram+'GB VRAM)')
+      + line('KV / user', fmt2(sizing.kvPU,2)+'GB · ctx='+sizing.ctxK+'K · avail='+fmt2(sizing.avail,1)+'GB → <b>'+fmt2(sizing.upr)+' users/replica</b>')
+      + line('Memory GPUs', sizing.replicas+' replicas × '+sizing.autoTp+' GPU = <b>'+sizing.gpusMemory+'</b>')
+      + line('Final required', 'max('+[sizing.gpusThroughput!=null?sizing.gpusThroughput:'—', sizing.gpusMemory].join(', ')+') = <b style="color:var(--blue)">'+sizing.gpusFinal+' '+sizing.gpuLabel+'</b>');
+  } else if(breakdownDetails){
+    breakdownDetails.style.display = 'none';
+  }
+
+  // ── Collapsible estimator details (raw metrics + debug) ──
+  var rows = [
+    ['Tokens / sec',      result.tokens_per_sec!=null?Math.round(result.tokens_per_sec)+' tok/s':'—'],
+    ['Tokens / sec / GPU',result.tokens_per_sec_per_gpu!=null?parseFloat(result.tokens_per_sec_per_gpu).toFixed(1)+' tok/s':'—'],
+    ['TTFT',              result.ttft_ms!=null?parseFloat(result.ttft_ms).toFixed(2)+' ms':'—'],
+    ['TPOT',              result.tpot_ms!=null?parseFloat(result.tpot_ms).toFixed(2)+' ms':'—'],
+    ['Request latency',   result.latency_ms!=null?parseFloat(result.latency_ms).toFixed(1)+' ms':'—'],
+    ['GPU memory',        result.gpu_memory_gb!=null?parseFloat(result.gpu_memory_gb).toFixed(1)+' GB':'—'],
+    ['Input / Output tokens', result.isl+' / '+result.osl+' tokens'],
+    ['Batch size',        result.batch],
+    ['Tensor parallel',   result.tp],
+    ['Pipeline parallel', result.pp],
+    ['Mode',              result.mode?result.mode.charAt(0).toUpperCase()+result.mode.slice(1):'—'],
+  ];
+  var tbl = document.getElementById('cal-metrics-table');
+  if(tbl){
+    tbl.innerHTML =
+      '<tr style="background:var(--bg2);border-bottom:1px solid var(--border)">'
+      +'<th style="text-align:left;padding:5px 10px;font-size:10px;color:var(--text4);font-weight:600;text-transform:uppercase">Metric</th>'
+      +'<th style="text-align:right;padding:5px 10px;font-size:10px;color:var(--text4);font-weight:600;text-transform:uppercase">Value</th></tr>'
+      + rows.map(function(row){
+        return '<tr style="border-bottom:1px solid var(--border)">'
+          +'<td style="padding:4px 10px;font-size:12px;color:var(--text3)">'+row[0]+'</td>'
+          +'<td style="padding:4px 10px;font-size:12px;font-family:var(--mono);text-align:right;color:var(--text1)">'+row[1]+'</td>'
+          +'</tr>';
+      }).join('');
+  }
+
+  renderCalSavedComparison();
+}
+
+function saveCalResult(){
+  if(!CAL_STATE.lastResult) return;
+  var r = Object.assign({id: Date.now()}, CAL_STATE.lastResult);
+  CAL_STATE.savedRuns.push(r);
+  try{ localStorage.setItem('cal_saved', JSON.stringify(CAL_STATE.savedRuns)); }catch(e){}
+  renderCalSavedComparison();
+}
+
+function deleteCalRun(id){
+  CAL_STATE.savedRuns = CAL_STATE.savedRuns.filter(function(r){return r.id !== id;});
+  try{ localStorage.setItem('cal_saved', JSON.stringify(CAL_STATE.savedRuns)); }catch(e){}
+  renderCalSavedComparison();
+}
+
+function clearCalSaved(){
+  CAL_STATE.savedRuns = [];
+  try{ localStorage.removeItem('cal_saved'); }catch(e){}
+  renderCalSavedComparison();
+}
+
+function renderCalSavedComparison(){
+  var comp = document.getElementById('cal-comparison');
+  if(!comp) return;
+  if(!CAL_STATE.savedRuns || CAL_STATE.savedRuns.length === 0){
+    comp.style.display = 'none';
+    return;
+  }
+  comp.style.display = 'block';
+
+  // Table
+  var tbody = document.getElementById('cal-compare-tbody');
+  if(tbody){
+    tbody.innerHTML = CAL_STATE.savedRuns.map(function(r){
+      var modeColor = r.mode==='exact'?'var(--green)':r.mode==='proxy'?'#dc2626':'var(--text3)';
+      var fn = function(v,dp){ return v!=null?(dp!=null?parseFloat(v).toFixed(dp):Math.round(v)):'—'; };
+      return '<tr style="border-bottom:1px solid var(--border)">'
+        +'<td style="padding:5px 8px;font-weight:500;font-size:12px">'+r.modelLabel+'</td>'
+        +'<td style="padding:5px 8px;color:var(--text2);font-size:12px">'+(CAL_GPU_LABELS[r.gpu]||r.gpu)+'</td>'
+        +'<td style="padding:5px 8px;color:var(--text2);font-size:12px">'+(r.backend||'').toUpperCase()+'</td>'
+        +'<td style="padding:5px 8px;text-align:right;font-family:var(--mono);font-size:12px">'+fn(r.tokens_per_sec)+'</td>'
+        +'<td style="padding:5px 8px;text-align:right;font-family:var(--mono);font-size:12px">'+fn(r.tokens_per_sec_per_gpu,1)+'</td>'
+        +'<td style="padding:5px 8px;text-align:right;font-family:var(--mono);font-size:12px">'+(r.latency_ms!=null?fn(r.latency_ms,1)+'ms':'—')+'</td>'
+        +'<td style="padding:5px 8px;text-align:right;font-family:var(--mono);font-size:12px">'+(r.ttft_ms!=null?fn(r.ttft_ms,1)+'ms':'—')+'</td>'
+        +'<td style="padding:5px 8px"><span style="font-size:10px;font-weight:600;color:'+modeColor+'">'+r.mode+'</span></td>'
+        +'<td style="padding:5px 8px"><button onclick="deleteCalRun('+r.id+')" style="font-size:10px;padding:1px 5px;border:1px solid var(--border);border-radius:3px;background:transparent;cursor:pointer;color:var(--text3)">✕</button></td>'
+        +'</tr>';
+    }).join('');
+  }
+
+  renderCalChart();
+}
+
+var calChartInstance = null;
+function renderCalChart(){
+  var metric = (document.getElementById('cal-compare-metric')||{}).value || 'tokens_per_sec';
+  var canvas = document.getElementById('cal-chart');
+  if(!canvas || !CAL_STATE.savedRuns.length) return;
+
+  var metricLabels = {tokens_per_sec:'Tokens/sec',latency_ms:'Latency (ms)',
+    ttft_ms:'TTFT (ms)',tpot_ms:'TPOT (ms)',gpu_memory_gb:'GPU memory (GB)'};
+
+  if(calChartInstance) calChartInstance.destroy();
+
+  // Scatter: X=latency, Y=selected metric (default tok/s)
+  // If latency not available fall back to bar chart
+  var hasLatency = CAL_STATE.savedRuns.some(function(r){ return r.latency_ms != null; });
+  var useScatter = hasLatency && metric !== 'latency_ms';
+
+  var colors = CAL_STATE.savedRuns.map(function(r){
+    return r.mode==='exact'?'rgba(22,163,74,0.8)':r.mode==='proxy'?'rgba(245,158,11,0.8)':'rgba(107,114,128,0.6)';
+  });
+
+  function drawChart(){
+    var cfg;
+    if(useScatter){
+      var points = CAL_STATE.savedRuns.map(function(r,i){
+        var xv = r.latency_ms; var yv = r[metric];
+        return {x: xv!=null?xv:0, y: yv!=null?yv:0, label: r.modelLabel, missing: xv==null||yv==null};
+      }).filter(function(p){ return !p.missing; }); // skip runs with missing values
+      cfg = {
+        type:'scatter',
+        data:{datasets:[{
+          label:metricLabels[metric]||metric,
+          data:points,
+          backgroundColor:colors,
+          pointRadius:8, pointHoverRadius:10
+        }]},
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{
+            legend:{display:false},
+            tooltip:{callbacks:{
+              label:function(ctx){
+                var d=ctx.raw;
+                return d.label+': x='+d.x.toFixed(1)+'ms y='+d.y.toFixed(1);
+              }
+            }}
+          },
+          scales:{
+            x:{title:{display:true,text:'Latency (ms)',font:{size:11}},ticks:{font:{size:11}}},
+            y:{title:{display:true,text:metricLabels[metric]||metric,font:{size:11}},ticks:{font:{size:11}}}
+          }
+        }
+      };
+    } else {
+      var labels = CAL_STATE.savedRuns.map(function(r){ return r.modelLabel + ' / ' + (CAL_GPU_LABELS[r.gpu]||r.gpu); });
+      var values = CAL_STATE.savedRuns.map(function(r){ return r[metric] || 0; });
+      cfg = {
+        type:'bar',
+        data:{labels:labels,datasets:[{
+          label:metricLabels[metric]||metric,
+          data:values,backgroundColor:colors,borderRadius:4
+        }]},
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.parsed.y.toFixed(1);}}}},
+          scales:{x:{ticks:{font:{size:11},maxRotation:30}},y:{ticks:{font:{size:11}}}}
+        }
+      };
+    }
+    calChartInstance = new Chart(canvas, cfg);
+  }
+
+  if(typeof Chart !== 'undefined'){
+    drawChart();
+  } else {
+    var s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';
+    s.onload=drawChart;
+    document.head.appendChild(s);
+  }
+}
+
+function calPullFromAdvanced(){
+  var gpuMap={'H100':'h100_sxm','H200':'h200_sxm','A100':'a100_sxm','A100 80GB':'a100_sxm',
+    'L40S':'l40s','B200':'b200_sxm','MI300X':'mi300x'};
+  var fwMap={'vllm':'vllm','trtllm':'trtllm','trt-llm':'trtllm'};
+
+  // Always copy full model arch from S — this is the definitive source
+  CAL_STATE.modelPath  = S.hfId || CAL_STATE.modelPath;
+  CAL_STATE.modelLabel = S.modelLabel;
+  CAL_STATE.modelArch  = {
+    params:S.params, prec:S.prec||'fp16', kvPrec:S.kvPrec||'fp16',
+    numLayers:S.numLayers, numKvHeads:S.numKvHeads, numHeads:S.numHeads,
+    headDim:S.headDim, attn:S.attn,
+    kvLayers:S.kvLayers||null, kvArchType:S.kvArchType||null,
+    kvGlobalLayers:S.kvGlobalLayers!=null?S.kvGlobalLayers:null,
+    kvSlidingLayers:S.kvSlidingLayers!=null?S.kvSlidingLayers:null,
+    slidingWindow:S.slidingWindow||null,
+    globalKvHeads:S.globalKvHeads||null, globalHeadDim:S.globalHeadDim||null,
+    kvLoraRank:S.kvLoraRank||null, qkRopeHeadDim:S.qkRopeHeadDim||null,
+    activeExperts:S.activeExperts||null, totalExperts:S.totalExperts||null
+  };
+
+  // Update model display
+  var disp = document.getElementById('cal-model-display');
+  if(disp) disp.textContent = S.modelLabel;
+  // Deselect preset chips (pulled model may not be a preset)
+  document.querySelectorAll('#cal-model-chips .chip').forEach(function(b){
+    b.classList.toggle('on', b.textContent.trim() === S.modelLabel);
+  });
+
+  // GPU
+  var gpuVal = gpuMap[S.gpuName] || 'h100_sxm';
+  var gpuSel = document.getElementById('cal-gpu');
+  if(gpuSel) gpuSel.value = gpuVal;
+
+  // Backend
+  var backEl = document.getElementById('cal-backend');
+  if(backEl && S.fw) backEl.value = fwMap[S.fw] || backEl.value;
+
+  // TP
+  var tpEl = document.getElementById('cal-tp');
+  if(tpEl && S.tp) tpEl.value = S.tp;
+
+  // Input tokens ≈ 75% of context window (ctx is in K tokens)
+  var islEl = document.getElementById('cal-isl');
+  if(islEl && S.ctx) islEl.value = Math.round(S.ctx * 1000 * 0.75);
+
+  // Batch size from concurrent users
+  var batchEl = document.getElementById('cal-batch');
+  if(batchEl && S.users) batchEl.value = S.users;
+
+  // Context window
+  var ctxEl = document.getElementById('cal-ctx');
+  if(ctxEl && S.ctx) ctxEl.value = S.ctx;
+
+  calPayloadEdited = false;
+  updateCalPayload();
+}
+
+function exportCalToSheets(){
+  var r = CAL_STATE.lastResult;
+  if(!r){ alert('Run an estimate first before exporting.'); return; }
+
+  // Build a simple CSV and open as data URI
+  var sz = CAL_STATE.lastSizing;
+  var rows = [
+    ['Model','GPU','Backend','Input tokens','Output tokens','Batch size','TTFT (ms)','TPOT (ms)','Latency (ms)','Tokens/sec','Tokens/sec/GPU','GPU memory (GB)','Req/s','Tokens/request','Throughput demand (tok/s)','GPUs for throughput','GPUs for memory fit','Final GPUs','Mode'],
+    [
+      r.modelLabel,
+      CAL_GPU_LABELS[r.gpu]||r.gpu,
+      (r.backend||'').toUpperCase(),
+      r.isl, r.osl, r.batch,
+      r.ttft_ms!=null?r.ttft_ms.toFixed(2):'',
+      r.tpot_ms!=null?r.tpot_ms.toFixed(2):'',
+      r.latency_ms!=null?r.latency_ms.toFixed(1):'',
+      r.tokens_per_sec!=null?Math.round(r.tokens_per_sec):'',
+      r.tokens_per_sec_per_gpu!=null?parseFloat(r.tokens_per_sec_per_gpu).toFixed(1):'',
+      r.gpu_memory_gb!=null?r.gpu_memory_gb.toFixed(1):'',
+      sz?sz.rps.toFixed(1):'', sz?sz.tokPerReq:'', sz?Math.round(sz.demandTps):'',
+      sz?sz.gpusThroughput||'—':'', sz?sz.gpusMemory:'', sz?sz.gpusFinal:'',
+      r.mode.charAt(0).toUpperCase()+r.mode.slice(1)
+    ]
+  ];
+  // Also add saved runs
+  if(CAL_STATE.savedRuns && CAL_STATE.savedRuns.length > 0){
+    CAL_STATE.savedRuns.forEach(function(sr){
+      rows.push([
+        sr.modelLabel, CAL_GPU_LABELS[sr.gpu]||sr.gpu, (sr.backend||'').toUpperCase(),
+        sr.isl, sr.osl, sr.batch,
+        sr.ttft_ms!=null?sr.ttft_ms.toFixed(2):'',
+        sr.tpot_ms!=null?sr.tpot_ms.toFixed(2):'',
+        sr.latency_ms!=null?sr.latency_ms.toFixed(1):'',
+        sr.tokens_per_sec!=null?Math.round(sr.tokens_per_sec):'',
+        sr.gpu_memory_gb!=null?sr.gpu_memory_gb.toFixed(1):'',
+        sr.mode.charAt(0).toUpperCase()+sr.mode.slice(1)
+      ]);
+    });
+  }
+  var csvLines = rows.map(function(row){ return row.map(function(c){ var s=String(c==null?'':c); return '"'+s.split('"').join('""')+'"'; }).join(','); }); var csv = csvLines.join('\n');
+  var blob = new Blob([csv], {type:'text/csv'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = 'calibrated-estimates.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+
+function recomputeSizing(){
+  var result = CAL_STATE.lastResult;
+  if(!result) return;
+  // Read editable inputs — override result fields
+  var szIsl   = document.getElementById('sz-isl');
+  var szOsl   = document.getElementById('sz-osl');
+  var szBatch = document.getElementById('sz-batch');
+  var szCtx   = document.getElementById('sz-ctx');
+  // Build a modified result copy with overridden values
+  var r2 = Object.assign({}, result);
+  if(szIsl   && szIsl.value)   { r2.isl        = parseInt(szIsl.value);   szIsl._edited   = true; }
+  if(szOsl   && szOsl.value)   { r2.osl        = parseInt(szOsl.value);   szOsl._edited   = true; }
+  if(szBatch && szBatch.value) { r2.batch       = parseInt(szBatch.value); szBatch._edited = true; }
+  if(szCtx   && szCtx.value){
+    // Also update the main context input so calcCalGPUs picks it up
+    var calCtx = document.getElementById('cal-ctx');
+    if(calCtx) calCtx.value = szCtx.value;
+    szCtx._edited = true;
+  }
+  // Always use current model arch from CAL_STATE, not stale result arch
+  r2.modelArch = CAL_STATE.modelArch;
+  r2.modelPath  = CAL_STATE.modelPath;
+  r2.modelLabel = CAL_STATE.modelLabel;
+  var sizing = calcCalGPUs(r2);
+  CAL_STATE.lastSizing = sizing;
+  if(!sizing) return;
+
+  var fmt  = function(v,unit,dp){ return v!=null?(dp!=null?parseFloat(v).toFixed(dp):Math.round(v))+unit:'—'; };
+  var fmtN = function(v){ return v!=null?Math.round(v).toLocaleString():'—'; };
+  var fmt2 = function(v,dp){ return v!=null?(dp!=null?parseFloat(v).toFixed(dp):Math.round(v).toLocaleString()):'—'; };
+
+  // Update the outcome tiles grid (re-render just the .oc-val values without full re-render)
+  var grid = document.getElementById('cal-metrics-grid');
+  if(grid){
+    var oc = function(label,val,sub,badge,cls){
+      return '<div class="oc'+(cls?' '+cls:'')+'">'
+        +'<div class="oc-label">'+label+'</div>'
+        +'<div class="oc-val">'+val+'</div>'
+        +'<div class="oc-sub">'+sub+'</div>'
+        +(badge||'')+'</div>';
+    };
+    var supply  = result.tokens_per_sec_per_gpu!=null ? fmt(result.tokens_per_sec_per_gpu,' tok/s',0) : '—';
+    var tokReq  = (r2.isl+r2.osl).toLocaleString();
+    var rpsStr  = sizing ? fmt(sizing.rps,'/s',1) : '—';
+    var demStr  = sizing ? fmtN(sizing.demandTps)+' tok/s' : '—';
+    var tGPUs   = sizing && sizing.gpusThroughput!=null ? String(sizing.gpusThroughput) : '—';
+    var mGPUs   = sizing ? String(sizing.gpusMemory) : '—';
+    var fGPUs   = sizing ? String(sizing.gpusFinal) : '—';
+    var heroBadge = '<span class="oc-badge good">'+sizing.autoTp+'× tensor parallel</span>';
+    var heroSub   = sizing.gpuLabel+' · '+sizing.replicas+' replica'+(sizing.replicas>1?'s':'')+' × '+sizing.autoTp+' GPU';
+    grid.innerHTML =
+        oc('Required GPUs', fGPUs, heroSub, heroBadge, 'winner')
+      + oc('Tokens / request', tokReq,  'input + output per request')
+      + oc('Req / sec',        rpsStr,  'batch ÷ request latency')
+      + oc('Throughput demand',demStr,  'req/s × tokens/request')
+      + oc('Supply / GPU',     supply,  'tok/s per GPU · from estimator')
+      + oc('Throughput GPUs',  tGPUs,   'ceil(demand ÷ supply/GPU)')
+      + oc('Memory / KV GPUs', mGPUs,   sizing.replicas+' replica×'+sizing.autoTp+'GPU · '+fmtN(sizing.upr)+' users/replica');
+  }
+
+  // Update breakdown lines
+  var breakdown = document.getElementById('cal-breakdown');
+  if(breakdown){
+    var line = function(label,val){
+      return '<div style="display:flex;align-items:baseline;gap:6px;padding:3px 0;border-bottom:1px solid var(--border)">'
+        +'<span style="font-size:11px;color:var(--text3);min-width:160px;flex-shrink:0">'+label+'</span>'
+        +'<span style="font-size:12px;font-family:var(--mono);color:var(--text2);flex:1">'+val+'</span>'
+        +'</div>';
+    };
+    breakdown.innerHTML =
+      line('Tokens / request', r2.isl+' + '+r2.osl+' = <b>'+fmt2(sizing.tokPerReq)+'</b> tokens')
+      + line('Req / sec', fmt2(sizing.batch)+' batch ÷ '+(sizing.latSec?fmt2(sizing.latSec,3)+'s lat':'est.')+' = <b>'+fmt2(sizing.rps,1)+'/s</b>')
+      + line('Throughput demand', fmt2(sizing.rps,1)+' × '+fmt2(sizing.tokPerReq)+' = <b>'+fmt2(sizing.demandTps)+' tok/s</b>')
+      +(sizing.tpsPerGpu ? line('Supply / GPU', 'estimator → <b>'+fmt2(sizing.tpsPerGpu,0)+' tok/s</b>') : '')
+      +(sizing.gpusThroughput!=null ? line('Throughput GPUs', 'ceil('+fmt2(sizing.demandTps)+' ÷ '+fmt2(sizing.tpsPerGpu,0)+') = <b>'+sizing.gpusThroughput+'</b>') : '')
+      + line('Auto TP', sizing.autoTp+'× (min to fit '+fmt2(sizing.wGB,1)+'GB weights on '+sizing.vram+'GB VRAM)')
+      + line('KV / user', fmt2(sizing.kvPU,2)+'GB · ctx='+sizing.ctxK+'K · avail='+fmt2(sizing.avail,1)+'GB → <b>'+fmt2(sizing.upr)+' users/replica</b>')
+      + line('Memory GPUs', sizing.replicas+' replicas × '+sizing.autoTp+' GPU = <b>'+sizing.gpusMemory+'</b>')
+      + line('Final required', 'max('+[sizing.gpusThroughput!=null?sizing.gpusThroughput:'—',sizing.gpusMemory].join(', ')+') = <b style="color:var(--blue)">'+sizing.gpusFinal+' '+sizing.gpuLabel+'</b>');
+  }
+}
+
+// ===== END CALIBRATED ESTIMATE PAGE =====
+
 </script>
 
 <!-- ===== VALIDATE WITH AI MODAL ===== -->
